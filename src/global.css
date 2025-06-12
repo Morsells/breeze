@@ -6,18 +6,21 @@ body, html, #root {
   background: linear-gradient(120deg, #f88508 0%, #39a2ae 100%);
 }
 
-/* Wichtig fürs Layout */
 .app-root {
+  height: 100vh;
+  min-height: 100vh;
+  overflow: hidden;
   display: flex;
   flex-direction: row;
 }
 
-/* Main muss Platz für Header (oben) und Sidebar (links) lassen */
 main {
   flex: 1;
-  padding: 120px 48px 0 300px; /* top: Header-Höhe, left: Sidebar-Breite + Abstand */
-  min-height: 100vh;
+  height: calc(100vh - 85px);  /* 85px Höhe Header */
+  padding: 0 48px 0 300px;     /* Nur links/rechts */
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  justify-content: flex-start;
 }

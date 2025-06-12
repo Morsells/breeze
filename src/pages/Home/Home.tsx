@@ -3,6 +3,17 @@ import React from "react";
 import styles from "./Home.module.css";
 import CityCard from "../../components/CityCard/CityCard";
 import WeatherDetailsCard from "../../components/WeatherDetailsCard/WeatherDetailsCard";
+import HourlyForecastCard from "../../components/HourlyForecastCard/HourlyForecastCard";
+
+const hours = [
+  { time: "12:00", iconUrl: "https://openweathermap.org/img/wn/01d.png", temp: 24 },
+  { time: "13:00", iconUrl: "https://openweathermap.org/img/wn/01d.png", temp: 27 },
+  { time: "14:00", iconUrl: "https://openweathermap.org/img/wn/03d.png", temp: 27 },
+  { time: "15:00", iconUrl: "https://openweathermap.org/img/wn/03d.png", temp: 25 },
+  { time: "16:00", iconUrl: "https://openweathermap.org/img/wn/01d.png", temp: 22 },
+  { time: "17:00", iconUrl: "https://openweathermap.org/img/wn/01d.png", temp: 22 },
+  { time: "18:00", iconUrl: "https://openweathermap.org/img/wn/01d.png", temp: 22 },
+];
 
 const Home: React.FC = () => (
   <div className={styles.container}>
@@ -24,6 +35,7 @@ const Home: React.FC = () => (
         sunset="20:37"
       />
     </div>
+    <HourlyForecastCard hours={hours} />
   </div>
 );
 

@@ -1,9 +1,11 @@
+
 .container {
-  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 32px;
-  padding: 36px 36px 0 0;
+  width: 100%;
+  align-items: center;
+  padding-top: 110px;
+  gap: 0;
 }
 
 .headerRow {
@@ -42,5 +44,11 @@
 
 .mainRow {
   display: flex;
-  gap: 28px;
+  flex-direction: row;
+  gap: 42px;
+  margin-top: 30px;
+  margin-bottom: 0;
+  width: 100%;
+  max-width: 1180px;
+  justify-content: center;
 }
