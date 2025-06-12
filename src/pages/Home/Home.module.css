@@ -1,11 +1,12 @@
-
 .container {
   display: flex;
   flex-direction: column;
   width: 100%;
   align-items: center;
   padding-top: 110px;
+  padding-left: 200px; /* Abstand zur Sidebar! (Sidebar-Breite + Puffer) */
   gap: 0;
+  box-sizing: border-box;
 }
 
 .headerRow {
@@ -45,10 +46,16 @@
 .mainRow {
   display: flex;
   flex-direction: row;
-  gap: 42px;
-  margin-top: 30px;
-  margin-bottom: 0;
-  width: 100%;
-  max-width: 1180px;
-  justify-content: center;
+  gap: 40px;
+  width: 100%;          /* nimmt volle Breite von cardWrapper */
+  margin: 0;
+}
+
+.cardWrapper {
+  width: 820px;              /* Feste Breite für alle Cards (z.B. 820px) */
+  margin-left: 220px;        /* Genauso breit wie Sidebar+Abstand! */
+  display: flex;    
+  flex-direction: column;
+  align-items: stretch;
+  gap: 32px;
 }
