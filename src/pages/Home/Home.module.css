@@ -1,13 +1,3 @@
-.container {
-  /* KEIN padding-left oder margin-left hier! */
-  display: flex;
-  flex-direction: column;
-  width: 100vw;
-  align-items: flex-start;
-  padding-top: 110px;
-  gap: 0;
-  box-sizing: border-box;
-}
 
 .headerRow {
   display: flex;
@@ -43,19 +33,20 @@
   gap: 20px;
 }
 
+
 .mainRow {
   display: flex;
   flex-direction: row;
-  gap: 5px;
-  width: 100%;              /* Genau die Breite von cardWrapper */
+  gap: 8px;
+  width: 100%;
+  align-items: flex-start; /* Cards obenbündig ausrichten */
 }
-
 .cardWrapper {
-  width: 820px;             /* Feste Breite für ALLE Cards */
+  width: 920px;             /* Feste Breite für ALLE Cards */
   margin-left: 120px;       /* Sidebar-Breite + Abstand */
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 32px;
+  gap: 16px;
   padding-top: 100px;
 }
