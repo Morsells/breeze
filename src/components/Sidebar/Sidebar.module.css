@@ -2,7 +2,7 @@
   position: fixed;
   top: 85px; /* Startet unter dem Header */
   left: 0;
-  width: 240px;
+  width: 340px;
   height: calc(100vh - 85px);
   display: flex;
   flex-direction: column;

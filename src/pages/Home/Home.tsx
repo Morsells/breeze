@@ -16,8 +16,8 @@ const hours = [
 ];
 
 const Home: React.FC = () => (
-  <div className={styles.container}>
-    <div className={styles.mainRow}>
+<div className={styles.cardWrapper}>
+  <div className={styles.mainRow}>
       <CityCard
         city="Würzburg"
         time="12:00"
