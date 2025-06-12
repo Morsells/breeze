@@ -1,17 +1,19 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Header from "./components/Header/Header";
 import Sidebar from "./components/Sidebar/Sidebar";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home/Home";
 import Forecast from "./pages/Forecast/Forecast";
 import Favorites from "./pages/Favorites/Favorites";
 import TravelPlanner from "./pages/TravelPlanner/TravelPlanner";
 import WeatherMap from "./pages/WeatherMap/WeatherMap";
 
-import "./global.css"; // dein Haupt-CSS
+import "./global.css";
 
 const App: React.FC = () => (
   <Router>
-    <div className="app-container">
+    <div className="app-root">
+      <Header />
       <Sidebar />
       <main>
         <Routes>

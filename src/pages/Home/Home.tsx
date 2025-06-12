@@ -6,14 +6,6 @@ import WeatherDetailsCard from "../../components/WeatherDetailsCard/WeatherDetai
 
 const Home: React.FC = () => (
   <div className={styles.container}>
-    <div className={styles.headerRow}>
-      <div className={styles.logo}>Breeze</div>
-      <input className={styles.search} placeholder="Search for your preferred city..." />
-      <div className={styles.topControls}>
-        {/* Hier kommen später ThemeSwitch etc. rein */}
-        <span>🌞</span>
-      </div>
-    </div>
     <div className={styles.mainRow}>
       <CityCard
         city="Würzburg"

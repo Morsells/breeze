@@ -1,19 +1,23 @@
-body, html, #root, .app-container {
+body, html, #root {
   min-height: 100vh;
   margin: 0;
   padding: 0;
   font-family: 'Poppins', sans-serif;
   background: linear-gradient(120deg, #f88508 0%, #39a2ae 100%);
 }
-.app-container {
+
+/* Wichtig fürs Layout */
+.app-root {
   display: flex;
   flex-direction: row;
-  min-height: 100vh;
 }
+
+/* Main muss Platz für Header (oben) und Sidebar (links) lassen */
 main {
   flex: 1;
-  margin-left: 260px;  /* Breite der Sidebar + Abstand */
-  padding: 120px 60px 48px 60px; /* Oben: Platz für Header, Links: Platz für Sidebar */
+  padding: 120px 48px 0 300px; /* top: Header-Höhe, left: Sidebar-Breite + Abstand */
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
 }

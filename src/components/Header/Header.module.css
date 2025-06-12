@@ -1,7 +1,7 @@
-/* src/components/Header/Header.module.css */
 .header {
   position: fixed;
-  left: 0; top: 0;
+  top: 0;
+  left: 0;
   width: 100vw;
   height: 85px;
   display: flex;
@@ -15,11 +15,11 @@
 
 .logo {
   font-family: 'Pacifico', cursive;
-  font-size: 2.7rem;
+  font-size: 2.6rem;
   color: #fff;
-  margin-right: 32px;
   letter-spacing: 2px;
   text-shadow: 2px 4px 20px #0005;
+  margin-right: 36px;
 }
 
 .search {

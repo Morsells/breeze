@@ -1,7 +1,6 @@
-// src/components/Sidebar/Sidebar.tsx
 import React from "react";
-import styles from "./Sidebar.module.css";
 import { NavLink } from "react-router-dom";
+import styles from "./Sidebar.module.css";
 
 const Sidebar: React.FC = () => (
   <nav className={styles.sidebar}>
