@@ -1,26 +1,29 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Sidebar from "./components/Sidebar/Sidebar";
+import Home from "./pages/Home/Home";
+import Forecast from "./pages/Forecast/Forecast";
+import Favorites from "./pages/Favorites/Favorites";
+import TravelPlanner from "./pages/TravelPlanner/TravelPlanner";
+import WeatherMap from "./pages/WeatherMap/WeatherMap";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+import "./global.css"; // dein Haupt-CSS
+
+const App: React.FC = () => (
+  <Router>
+    <div className="app-container">
+      <Sidebar />
+      <main>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/forecast" element={<Forecast />} />
+          <Route path="/favorites" element={<Favorites />} />
+          <Route path="/travel-planner" element={<TravelPlanner />} />
+          <Route path="/weather-map" element={<WeatherMap />} />
+        </Routes>
+      </main>
     </div>
-  );
-}
+  </Router>
+);
 
 export default App;
