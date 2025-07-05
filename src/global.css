@@ -1,4 +1,6 @@
-body, html, #root {
+body,
+html,
+#root {
   min-height: 100vh;
   margin: 0;
   padding: 0;
@@ -16,11 +18,20 @@ body, html, #root {
 
 main {
   flex: 1;
-  height: calc(100vh - 85px);  /* 85px Höhe Header */
-  padding: 0 48px 0 300px;     /* Nur links/rechts */
-  overflow: hidden;
+  /* Lässt den Bereich den verfügbaren Platz füllen */
+
+  /* Korrigiertes Padding: oben und unten Abstand hinzufügen */
+  padding: 105px 48px 40px 300px;
+  /* Oben (105px), Rechts (48px), Unten (40px), Links (300px) */
+
+  /* Korrigiertes Overflow: Scrollen erlauben, wenn nötig */
+  overflow-y: auto;
+  /* Erlaubt vertikales Scrollen NUR bei Bedarf */
+
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
-}   
+
+  /* Die feste 'height' wurde entfernt, da Flexbox und overflow das besser regeln */
+}
