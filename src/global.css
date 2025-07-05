@@ -18,20 +18,12 @@ html,
 
 main {
   flex: 1;
-  /* Lässt den Bereich den verfügbaren Platz füllen */
-
-  /* Korrigiertes Padding: oben und unten Abstand hinzufügen */
   padding: 105px 48px 40px 300px;
-  /* Oben (105px), Rechts (48px), Unten (40px), Links (300px) */
-
-  /* Korrigiertes Overflow: Scrollen erlauben, wenn nötig */
   overflow-y: auto;
-  /* Erlaubt vertikales Scrollen NUR bei Bedarf */
-
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
 
-  /* Die feste 'height' wurde entfernt, da Flexbox und overflow das besser regeln */
+  align-items: stretch;
+
+  justify-content: flex-start;
 }
