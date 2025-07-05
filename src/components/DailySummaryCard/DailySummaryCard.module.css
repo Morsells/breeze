@@ -1,0 +1,52 @@
+.card {
+    flex: 1;
+    background-color: #3a3a3a;
+    color: white;
+    border-radius: 20px;
+    padding: 1.25rem 1rem;
+    text-align: center;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    min-width: 120px;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    border-color: #f88508;
+}
+
+.activeCard {
+    background-color: #39a2ae;
+    border-color: #39a2ae;
+}
+
+.dayName {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.weatherIcon {
+    font-size: 2.5rem;
+}
+
+.temp {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0.5rem 0;
+}
+
+.airIcon {
+    font-size: 2rem;
+    opacity: 0.8;
+}
+
+.airQuality {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.airQualityDesc {
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
