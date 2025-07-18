@@ -1,13 +1,200 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Breeze Weather App Design System - All colors, gradients, fonts, etc defined here
+Primary: #39A2AE (blue), Accent: #F88508 (orange), Dynamic weather backgrounds
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Base colors */
+    --background: 0 0% 100%;
+    --foreground: 220 10% 15%;
+
+    /* Card system */
+    --card: 0 0% 100%;
+    --card-foreground: 220 10% 15%;
+
+    /* Popover system */
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 10% 15%;
+
+    /* Breeze brand colors */
+    --primary: 189 48% 46%; /* #39A2AE */
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 189 48% 56%;
+
+    --accent: 30 94% 50%; /* #F88508 */
+    --accent-foreground: 0 0% 100%;
+    --accent-glow: 30 94% 60%;
+
+    /* Secondary system */
+    --secondary: 220 10% 96%;
+    --secondary-foreground: 220 10% 15%;
+
+    /* Muted system */
+    --muted: 220 10% 96%;
+    --muted-foreground: 220 10% 45%;
+
+    /* Interactive states */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 10% 90%;
+    --input: 220 10% 90%;
+    --ring: 189 48% 46%;
+
+    /* Weather condition backgrounds */
+    --sunny-gradient: linear-gradient(135deg, hsl(30 94% 60%) 0%, hsl(15 85% 55%) 100%);
+    --rainy-gradient: linear-gradient(135deg, hsl(210 50% 60%) 0%, hsl(220 60% 45%) 100%);
+    --cloudy-gradient: linear-gradient(135deg, hsl(210 15% 70%) 0%, hsl(220 20% 60%) 100%);
+    --clear-gradient: linear-gradient(135deg, hsl(200 60% 70%) 0%, hsl(189 48% 56%) 100%);
+
+    /* Shadows and effects */
+    --shadow-card: 0 4px 20px -4px hsl(220 10% 15% / 0.1);
+    --shadow-elevation: 0 10px 30px -10px hsl(189 48% 46% / 0.2);
+    --shadow-glow: 0 0 40px hsl(189 48% 56% / 0.3);
+
+    /* Transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* Base colors - dark theme */
+    --background: 220 15% 8%;
+    --foreground: 220 5% 95%;
+
+    /* Card system - dark theme */
+    --card: 220 15% 12%;
+    --card-foreground: 220 5% 95%;
+
+    /* Popover system - dark theme */
+    --popover: 220 15% 12%;
+    --popover-foreground: 220 5% 95%;
+
+    /* Brand colors stay consistent */
+    --primary: 189 48% 56%; /* Slightly brighter in dark */
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 189 48% 66%;
+
+    --accent: 30 94% 60%; /* Slightly brighter in dark */
+    --accent-foreground: 0 0% 100%;
+    --accent-glow: 30 94% 70%;
+
+    /* Secondary system - dark theme */
+    --secondary: 220 15% 15%;
+    --secondary-foreground: 220 5% 90%;
+
+    /* Muted system - dark theme */
+    --muted: 220 15% 15%;
+    --muted-foreground: 220 5% 65%;
+
+    /* Interactive states - dark theme */
+    --destructive: 0 84% 65%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 15% 20%;
+    --input: 220 15% 20%;
+    --ring: 189 48% 56%;
+
+    /* Weather gradients adapted for dark mode */
+    --sunny-gradient: linear-gradient(135deg, hsl(30 94% 50%) 0%, hsl(15 85% 45%) 100%);
+    --rainy-gradient: linear-gradient(135deg, hsl(210 50% 40%) 0%, hsl(220 60% 35%) 100%);
+    --cloudy-gradient: linear-gradient(135deg, hsl(210 15% 40%) 0%, hsl(220 20% 35%) 100%);
+    --clear-gradient: linear-gradient(135deg, hsl(200 60% 50%) 0%, hsl(189 48% 46%) 100%);
+
+    /* Shadows adapted for dark mode */
+    --shadow-card: 0 4px 20px -4px hsl(0 0% 0% / 0.3);
+    --shadow-elevation: 0 10px 30px -10px hsl(189 48% 46% / 0.4);
+    --shadow-glow: 0 0 40px hsl(189 48% 56% / 0.4);
+
+    /* Sidebar colors */
+    --sidebar-background: 220 15% 10%;
+    --sidebar-foreground: 220 5% 90%;
+    --sidebar-primary: 189 48% 56%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 15% 15%;
+    --sidebar-accent-foreground: 220 5% 90%;
+    --sidebar-border: 220 15% 20%;
+    --sidebar-ring: 189 48% 56%;
+  }
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-poppins;
+  }
+}
+
+@layer utilities {
+  /* Weather background utilities */
+  .bg-sunny {
+    background: var(--sunny-gradient);
+  }
+  
+  .bg-rainy {
+    background: var(--rainy-gradient);
+  }
+  
+  .bg-cloudy {
+    background: var(--cloudy-gradient);
+  }
+  
+  .bg-clear {
+    background: var(--clear-gradient);
+  }
+
+  /* Enhanced shadow utilities */
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  
+  .shadow-elevation {
+    box-shadow: var(--shadow-elevation);
+  }
+  
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  /* Transition utilities */
+  .transition-smooth {
+    transition: var(--transition-smooth);
+  }
+  
+  .transition-bounce {
+    transition: var(--transition-bounce);
+  }
+
+  /* Glassmorphism effects */
+  .glass {
+    backdrop-filter: blur(10px);
+    background: hsl(var(--card) / 0.8);
+    border: 1px solid hsl(var(--border) / 0.2);
+  }
 }
