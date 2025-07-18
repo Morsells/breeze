@@ -5,21 +5,38 @@ import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaf
 import { MapPin, Navigation } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { weatherService } from "@/services/weatherService"; // Passe ggf. den Pfad an!
+import { weatherService } from "@/services/weatherService";
 
 const OPENWEATHER_API_KEY = "662f9e367e0eed1c1a0ba5e40a5fc2b4";
 
+// Für dynamischen Background wie auf Index
+function getBackgroundClass(condition?: string) {
+  switch (condition) {
+    case "sunny":
+      return "bg-sunny";
+    case "rainy":
+      return "bg-rainy";
+    case "cloudy":
+      return "bg-cloudy";
+    case "snowy":
+      return "bg-clear";
+    default:
+      return "bg-sunny";
+  }
+}
 
-function WeatherMarker({ position }: { position: [number, number] }) {
+// Komponente, um Wetter und Condition des Markers an die Elternkomponente zu melden
+function WeatherMarker({ position, onWeatherLoaded }: { position: [number, number], onWeatherLoaded: (condition: string | undefined) => void }) {
   const [weather, setWeather] = useState<any>(null);
 
-  // Wetterdaten bei Positionswechsel laden
   useEffect(() => {
-    setWeather(null); // Reset while loading
-    weatherService.getCurrentWeather(position[0], position[1]).then(setWeather);
-  }, [position[0], position[1]]);
+    setWeather(null);
+    weatherService.getCurrentWeather(position[0], position[1]).then(w => {
+      setWeather(w);
+      onWeatherLoaded(w?.condition);
+    });
+  }, [position[0], position[1], onWeatherLoaded]);
 
-  // Default Leaflet Icon fix
   const icon = L.icon({
     iconUrl: "https://cdn.jsdelivr.net/npm/lucide-static/icons/map-pin.svg",
     iconSize: [32, 32],
@@ -48,7 +65,6 @@ function WeatherMarker({ position }: { position: [number, number] }) {
   );
 }
 
-// Komponente, um auf Kartenklick zu reagieren
 function ClickHandler({ onMapClick }: { onMapClick: (coords: [number, number]) => void }) {
   useMapEvents({
     click(e) {
@@ -60,9 +76,13 @@ function ClickHandler({ onMapClick }: { onMapClick: (coords: [number, number]) =
 
 const WeatherMap = () => {
   const [markerPos, setMarkerPos] = useState<[number, number] | null>(null);
+  const [markerWeather, setMarkerWeather] = useState<string | undefined>("sunny");
+
+  // Background wechselt mit Wetter des Markers (wie auf Home)
+  const bgClass = getBackgroundClass(markerWeather);
 
   return (
-    <div className="min-h-screen bg-clear">
+    <div className={`min-h-screen ${bgClass}`}>
       <div className="container mx-auto p-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2 text-white">Weather Map</h1>
@@ -85,7 +105,12 @@ const WeatherMap = () => {
                 attribution='&copy; <a href="https://openweathermap.org/">OpenWeatherMap</a>'
               />
               <ClickHandler onMapClick={setMarkerPos} />
-              {markerPos && <WeatherMarker position={markerPos} />}
+              {markerPos && (
+                <WeatherMarker
+                  position={markerPos}
+                  onWeatherLoaded={setMarkerWeather}
+                />
+              )}
             </MapContainer>
           </div>
         </Card>
