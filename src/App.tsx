@@ -13,7 +13,8 @@ import SavedCities from "./pages/SavedCities";
 import WeatherMap from "./pages/WeatherMap";
 import NotFound from "./pages/NotFound";
 import SidebarOpenButton from "@/components/ui/SidebarOpenButton";
-
+import SidebarOpenButtonMobileRight from "@/components/ui/SidebarOpenButtonMobileRight";
+import BottomNav from "@/components/ui/BottomNav";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -25,6 +26,7 @@ const App = () => (
         <SidebarProvider defaultOpen={true}>
           <div className="min-h-screen flex w-full">
             <SidebarOpenButton />
+            <SidebarOpenButtonMobileRight />
             <AppSidebar />
             <SidebarInset className="flex-1">
               <Routes>
@@ -36,6 +38,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </SidebarInset>
+            <BottomNav /> 
           </div>
         </SidebarProvider>
       </BrowserRouter>

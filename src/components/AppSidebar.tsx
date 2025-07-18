@@ -1,15 +1,15 @@
-
 import { useState, useEffect } from "react";
-import { 
-  Home, 
-  Calendar, 
-  MapPin, 
-  Heart, 
+import {
+  Home,
+  Calendar,
+  MapPin,
+  Heart,
   Map,
   Search,
   Moon,
   Sun,
-  Settings
+  Settings,
+  Smartphone
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
@@ -23,11 +23,14 @@ import {
   SidebarMenuItem,
   SidebarHeader,
   SidebarTrigger,
+  useSidebar // wichtig: für das Öffnen/Schließen
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { weatherService } from "@/services/weatherService";
 import { GeocodingResult } from "@/types/weather";
+import { useIsMobile } from "@/hooks/use-mobile";
+
 
 const navigation = [
   { title: "Home", url: "/", icon: Home },
@@ -44,11 +47,13 @@ export function AppSidebar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<GeocodingResult[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const isMobile = useIsMobile();
+  const { open, setOpen } = useSidebar(); // Steuert Sidebar open/close global
 
   const isActive = (path: string) => currentPath === path;
   const getNavClasses = (path: string) =>
-    isActive(path) 
-      ? "bg-primary text-primary-foreground" 
+    isActive(path)
+      ? "bg-primary text-primary-foreground"
       : "hover:bg-secondary/50 transition-smooth";
 
   const toggleDarkMode = () => {
@@ -80,10 +85,16 @@ export function AppSidebar() {
   const handleCitySelect = (city: GeocodingResult) => {
     setSearchQuery(`${city.name}, ${city.country}`);
     setShowResults(false);
-    // You can emit an event or use context to update the main weather data
-    window.dispatchEvent(new CustomEvent('locationChange', { 
-      detail: { lat: city.lat, lon: city.lon, name: city.name } 
+    window.dispatchEvent(new CustomEvent('locationChange', {
+      detail: { lat: city.lat, lon: city.lon, name: city.name }
     }));
+    // Wenn Mobile, Sidebar nach Auswahl schließen
+    if (isMobile) setOpen(false);
+  };
+
+  // Hilfsfunktion: Navigation Button Handler für Mobile
+  const handleNavClick = () => {
+    if (isMobile) setOpen(false);
   };
 
   return (
@@ -151,6 +162,7 @@ export function AppSidebar() {
                       to={item.url}
                       end
                       className={`${getNavClasses(item.url)} flex items-center gap-3 p-3 rounded-lg font-medium`}
+                      onClick={handleNavClick} // <---- Schließt die Sidebar auf Mobile
                     >
                       <item.icon className="h-5 w-5 flex-shrink-0" />
                       <span>{item.title}</span>
@@ -158,6 +170,26 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
+              {/* Hier die zusätzliche Mobile-Only Option */}
+              {isMobile && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <button
+                      type="button"
+                      className="flex items-center gap-3 p-3 rounded-lg font-medium hover:bg-secondary/50 transition-smooth w-full"
+                      onClick={() => {
+                        // Hier kannst du irgendwas machen, z.B. Modal öffnen:
+                        alert('Mobile special action!');
+                        setOpen(false); // Sidebar schließen
+                      }}
+                    >
+                      <Smartphone className="h-5 w-5 flex-shrink-0" />
+                      <span>Mobile Only</span>
+                    </button>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
