@@ -1,5 +1,10 @@
+"use client";
 import { Card } from "@/components/ui/card";
+import { MapContainer, TileLayer, LayersControl } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 import { MapPin, Navigation } from "lucide-react";
+
+const OPENWEATHER_API_KEY = "DEIN_OPENWEATHER_API_KEY"; // <-- hier deinen Key eintragen!
 
 const WeatherMap = () => {
   return (
@@ -12,19 +17,43 @@ const WeatherMap = () => {
 
         {/* Map Container */}
         <Card className="h-[600px] shadow-card glass overflow-hidden">
-          <div className="h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
-            <div className="text-center">
-              <MapPin className="h-16 w-16 text-primary mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Interactive Weather Map</h3>
-              <p className="text-muted-foreground max-w-md">
-                Click on any location to view detailed weather information. 
-                Use zoom and pan gestures to navigate around the globe.
-              </p>
-              <div className="flex items-center justify-center gap-2 mt-4 text-sm text-muted-foreground">
-                <Navigation className="h-4 w-4" />
-                <span>Pan • Zoom • Click to explore</span>
-              </div>
-            </div>
+          <div className="h-full">
+            <MapContainer
+              center={[50, 10]}
+              zoom={4}
+              style={{ height: "100%", width: "100%" }}
+              scrollWheelZoom={true}
+            >
+              <LayersControl position="topright">
+                <LayersControl.BaseLayer checked name="OpenStreetMap">
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+                  />
+                </LayersControl.BaseLayer>
+                <LayersControl.Overlay checked name="Clouds">
+                  <TileLayer
+                    url={`https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`}
+                    attribution='&copy; <a href="https://openweathermap.org/">OpenWeatherMap</a>'
+                  />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay name="Precipitation">
+                  <TileLayer
+                    url={`https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`}
+                  />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay name="Temperature">
+                  <TileLayer
+                    url={`https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`}
+                  />
+                </LayersControl.Overlay>
+                <LayersControl.Overlay name="Wind">
+                  <TileLayer
+                    url={`https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`}
+                  />
+                </LayersControl.Overlay>
+              </LayersControl>
+            </MapContainer>
           </div>
         </Card>
 
