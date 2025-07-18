@@ -1,31 +1,44 @@
-import React from "react";
-import Header from "./components/Header/Header";
-import Sidebar from "./components/Sidebar/Sidebar";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home/Home";
-import Forecast from "./pages/Forecast/Forecast";
-import Favorites from "./pages/Favorites/Favorites";
-import TravelPlanner from "./pages/TravelPlanner/TravelPlanner";
-import WeatherMap from "./pages/WeatherMap/WeatherMap";
 
-import "./global.css";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AppSidebar } from "@/components/AppSidebar";
+import Index from "./pages/Index";
+import Forecast from "./pages/Forecast";
+import Travel from "./pages/Travel";
+import SavedCities from "./pages/SavedCities";
+import WeatherMap from "./pages/WeatherMap";
+import NotFound from "./pages/NotFound";
 
-const App: React.FC = () => (
-  <Router>
-    <div className="app-root">
-      <Header />
-      <Sidebar />
-      <main>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/forecast" element={<Forecast />} />
-          <Route path="/favorites" element={<Favorites />} />
-          <Route path="/travel-planner" element={<TravelPlanner />} />
-          <Route path="/weather-map" element={<WeatherMap />} />
-        </Routes>
-      </main>
-    </div>
-  </Router>
+const queryClient = new QueryClient();
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <SidebarProvider defaultOpen={true}>
+          <div className="min-h-screen flex w-full">
+            <AppSidebar />
+            <SidebarInset className="flex-1">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/forecast" element={<Forecast />} />
+                <Route path="/travel" element={<Travel />} />
+                <Route path="/saved" element={<SavedCities />} />
+                <Route path="/map" element={<WeatherMap />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </SidebarInset>
+          </div>
+        </SidebarProvider>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
 );
 
 export default App;
