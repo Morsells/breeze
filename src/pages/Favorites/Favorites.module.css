@@ -1,0 +1,56 @@
+.favoritesContainer {
+    /* Wir nutzen Flexbox für eine saubere Ausrichtung von Titel und Grid */
+    display: flex;
+    flex-direction: column;
+    padding: 2rem 3rem;
+    /* Etwas mehr seitlicher Abstand */
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.title {
+    color: white;
+    font-size: 1.5rem;
+    /* 24px */
+    font-weight: 600;
+    margin: 0 0 2rem 0;
+    /* Kein oberer/seitlicher Margin, nur unten */
+    text-align: left;
+}
+
+/* In: src/pages/Favorites/Favorites.module.css */
+
+.favoritesGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 2.5rem;
+    /* <-- Erhöhe einfach diesen Wert (vorher war er 2rem) */
+}
+
+/* Die "+"-Karte */
+.addCard {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    aspect-ratio: 1 / 1.1;
+    min-height: 170px;
+    /* Passende Mindesthöhe */
+    background-color: #00A9B5;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    padding: 0;
+}
+
+.addCard:hover {
+    transform: translateY(-5px);
+    background-color: #00c2d1;
+}
+
+.plusIcon {
+    font-size: 4rem;
+    font-weight: 200;
+    color: white;
+    line-height: 1;
+}
