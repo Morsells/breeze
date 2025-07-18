@@ -16,6 +16,11 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+
+function roundCoord(coord?: number): number | undefined {
+  return coord !== undefined ? Number(coord.toFixed(4)) : undefined;
+}
+
   // Dynamic background based on weather condition
   const getBackgroundClass = (condition?: string) => {
     switch (condition) {
@@ -139,7 +144,12 @@ const Index = () => {
         </div>
 
         {/* Main Weather Card */}
-        <WeatherCard {...currentWeather} className="mb-6" />
+          <WeatherCard
+            {...currentWeather}
+            className="mb-6"
+            lat={roundCoord(lat)}
+            lon={roundCoord(lon)}
+          />
 
         {/* Weather Details Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

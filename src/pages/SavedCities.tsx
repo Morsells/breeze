@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { WeatherCard } from "@/components/WeatherCard";
 import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
@@ -14,120 +13,204 @@ interface SavedCity {
   weather?: AppWeatherData;
 }
 
+// Hilfsfunktion für saubere Rundung!
+function roundCoord(coord: number): number {
+  return Number(coord.toFixed(4));
+}
+
+const DEFAULT_CITIES: SavedCity[] = [
+  { name: "Würzburg", lat: roundCoord(49.7913), lon: roundCoord(9.9534) },
+  { name: "Stockholm", lat: roundCoord(59.3293), lon: roundCoord(18.0686) },
+  { name: "Barcelona", lat: roundCoord(41.3851), lon: roundCoord(2.1734) },
+  { name: "Berlin", lat: roundCoord(52.5200), lon: roundCoord(13.4050) },
+];
+
+
 const SavedCities = () => {
   const [savedCities, setSavedCities] = useState<SavedCity[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load saved cities from localStorage
-  useEffect(() => {
-    const loadSavedCities = async () => {
-      try {
-        const saved = JSON.parse(localStorage.getItem('savedCities') || '[]') as SavedCity[];
-        
-        // Default cities if none saved
-        const defaultCities = saved.length > 0 ? saved : [
-          { name: 'Würzburg', lat: 49.7913, lon: 9.9534 },
-          { name: 'Stockholm', lat: 59.3293, lon: 18.0686 },
-          { name: 'Barcelona', lat: 41.3851, lon: 2.1734 },
-          { name: 'Berlin', lat: 52.5200, lon: 13.4050 },
-        ];
+  // Hilfsfunktion fürs Einlesen
+  function parseCities(cities: any[]): SavedCity[] {
+    return (cities || []).map((c: any) => ({
+      ...c,
+      lat: Number(c.lat),
+      lon: Number(c.lon),
+    }));
+  }
 
-        // Fetch weather data for each city
-        const citiesWithWeather = await Promise.all(
-          defaultCities.map(async (city) => {
-            try {
-              const weather = await weatherService.getCurrentWeather(city.lat, city.lon);
-              return { ...city, weather };
-            } catch (error) {
-              console.error(`Error fetching weather for ${city.name}:`, error);
-              return city;
-            }
-          })
+  // Initial load & Wetterdaten holen
+  const loadSavedCities = useCallback(async () => {
+    setLoading(true);
+    try {
+      // Immer als Number einlesen!
+      const saved = parseCities(JSON.parse(localStorage.getItem("savedCities") || "[]"));
+      const baseCities = saved.length > 0 ? saved : DEFAULT_CITIES;
+
+      const citiesWithWeather = await Promise.all(
+        baseCities.map(async (city) => {
+          try {
+            const weather = await weatherService.getCurrentWeather(roundCoord(city.lat), roundCoord(city.lon));
+            return { ...city, lat: roundCoord(city.lat), lon: roundCoord(city.lon), weather };
+          } catch {
+            return { ...city, lat: roundCoord(city.lat), lon: roundCoord(city.lon) };
+          }
+        })
+      );
+      setSavedCities(citiesWithWeather);
+
+      // Defaults speichern, falls keine Cities vorher da
+      if (saved.length === 0) {
+        localStorage.setItem(
+          "savedCities",
+          JSON.stringify(DEFAULT_CITIES)
         );
-
-        setSavedCities(citiesWithWeather);
-        
-        // Save default cities if none were saved before
-        if (saved.length === 0) {
-          localStorage.setItem('savedCities', JSON.stringify(defaultCities));
-        }
-      } catch (error) {
-        console.error('Error loading saved cities:', error);
-        setSavedCities([]);
-      } finally {
-        setLoading(false);
       }
-    };
-
-    loadSavedCities();
+    } catch (error) {
+      setSavedCities([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    loadSavedCities();
+  }, [loadSavedCities]);
+
+  // City entfernen
   const removeCity = (index: number) => {
-    const updated = savedCities.filter((_, i) => i !== index);
+    const cityToRemove = savedCities[index];
+    const updated = savedCities.filter((city, i) => {
+      return !(
+        roundCoord(city.lat) === roundCoord(cityToRemove.lat) &&
+        roundCoord(city.lon) === roundCoord(cityToRemove.lon)
+      );
+    });
     setSavedCities(updated);
-    localStorage.setItem('savedCities', JSON.stringify(updated.map(city => ({
-      name: city.name,
-      lat: city.lat,
-      lon: city.lon
-    }))));
+    localStorage.setItem(
+      "savedCities",
+      JSON.stringify(
+        updated.map(({ name, lat, lon }) => ({
+          name,
+          lat: roundCoord(lat),
+          lon: roundCoord(lon),
+        }))
+      )
+    );
   };
 
+  // Wetterdaten neu laden (manuell & im Intervall)
   const refreshWeather = async () => {
     setLoading(true);
     try {
       const citiesWithWeather = await Promise.all(
         savedCities.map(async (city) => {
           try {
-            const weather = await weatherService.getCurrentWeather(city.lat, city.lon);
+            const weather = await weatherService.getCurrentWeather(roundCoord(city.lat), roundCoord(city.lon));
             return { ...city, weather };
-          } catch (error) {
-            console.error(`Error refreshing weather for ${city.name}:`, error);
+          } catch {
             return city;
           }
         })
       );
       setSavedCities(citiesWithWeather);
-    } catch (error) {
-      console.error('Error refreshing weather:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Listen for new cities added from search
+  // Wetterdaten automatisch alle 10 Minuten neu laden
   useEffect(() => {
-    const handleCityAdd = (event: CustomEvent) => {
+    const interval = setInterval(() => {
+      refreshWeather();
+    }, 10 * 60 * 1000); // 10 Minuten
+    return () => clearInterval(interval);
+  }, [savedCities]);
+
+  // Tab-Synchronisierung (immer parseCities benutzen!)
+  useEffect(() => {
+    const syncCities = () => {
+      const saved = parseCities(JSON.parse(localStorage.getItem("savedCities") || "[]"));
+      setSavedCities((current) => {
+        if (
+          saved.length !== current.length ||
+          saved.some(
+            (s, i) =>
+              roundCoord(s.lat) !== roundCoord(current[i]?.lat) ||
+              roundCoord(s.lon) !== roundCoord(current[i]?.lon)
+          )
+        ) {
+          return saved.map(city => ({
+            ...city,
+            lat: roundCoord(city.lat),
+            lon: roundCoord(city.lon),
+          }));
+        }
+        return current;
+      });
+    };
+    window.addEventListener("storage", syncCities);
+    return () => window.removeEventListener("storage", syncCities);
+  }, []);
+
+  // Neue Stadt hinzufügen (aus Suche/Map) – alles gerundet & als Number!
+  useEffect(() => {
+    const handleCityAdd = async (event: CustomEvent) => {
       const { lat, lon, name } = event.detail;
-      
-      // Check if city already exists
-      const exists = savedCities.some(city => 
-        Math.abs(city.lat - lat) < 0.01 && Math.abs(city.lon - lon) < 0.01
+      const roundedLat = roundCoord(Number(lat));
+      const roundedLon = roundCoord(Number(lon));
+      const exists = savedCities.some(
+        (city) =>
+          roundCoord(city.lat) === roundedLat &&
+          roundCoord(city.lon) === roundedLon
       );
-      
       if (!exists) {
-        const newCity = { name, lat, lon };
+        let weather: AppWeatherData | undefined = undefined;
+        try {
+          weather = await weatherService.getCurrentWeather(roundedLat, roundedLon);
+        } catch {}
+        const newCity = { name, lat: roundedLat, lon: roundedLon, weather };
         const updated = [...savedCities, newCity];
         setSavedCities(updated);
-        localStorage.setItem('savedCities', JSON.stringify(updated.map(city => ({
-          name: city.name,
-          lat: city.lat,
-          lon: city.lon
-        }))));
-        
-        // Fetch weather for new city
-        weatherService.getCurrentWeather(lat, lon).then(weather => {
-          setSavedCities(prev => prev.map(city => 
-            city.name === name ? { ...city, weather } : city
-          ));
-        }).catch(error => {
-          console.error(`Error fetching weather for new city ${name}:`, error);
-        });
+        localStorage.setItem(
+          "savedCities",
+          JSON.stringify(
+            updated.map(({ name, lat, lon }) => ({
+              name,
+              lat: roundCoord(lat),
+              lon: roundCoord(lon),
+            }))
+          )
+        );
       }
     };
-
-    window.addEventListener('addCity', handleCityAdd as EventListener);
-    return () => window.removeEventListener('addCity', handleCityAdd as EventListener);
+    window.addEventListener("addCity", handleCityAdd as EventListener);
+    return () => window.removeEventListener("addCity", handleCityAdd as EventListener);
   }, [savedCities]);
+
+  // Fehlende Wetterdaten nachladen
+  useEffect(() => {
+    const fetchMissingWeather = async () => {
+      const needsWeather = savedCities.filter((c) => !c.weather);
+      if (needsWeather.length === 0) return;
+      const updated = await Promise.all(
+        savedCities.map(async (city) =>
+          city.weather
+            ? city
+            : {
+                ...city,
+                weather: await weatherService
+                  .getCurrentWeather(roundCoord(city.lat), roundCoord(city.lon))
+                  .catch(() => undefined),
+              }
+        )
+      );
+      setSavedCities(updated);
+    };
+    fetchMissingWeather();
+  }, [savedCities]);
+
+  // --- UI ---
 
   if (loading) {
     return (
@@ -156,7 +239,9 @@ const SavedCities = () => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold mb-2 text-white">Saved Cities</h1>
-            <p className="text-white/80">Your favorite locations at a glance</p>
+            <p className="text-white/80">
+              Your favorite locations at a glance
+            </p>
           </div>
           <Button onClick={refreshWeather} className="gap-2">
             <Plus className="h-4 w-4" />
@@ -167,7 +252,9 @@ const SavedCities = () => {
         {savedCities.length === 0 ? (
           <div className="text-center text-white py-12">
             <h2 className="text-xl font-semibold mb-2">No saved cities</h2>
-            <p className="text-white/80">Use the search bar to add cities to your favorites</p>
+            <p className="text-white/80">
+              Use the search bar to add cities to your favorites
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -180,12 +267,19 @@ const SavedCities = () => {
                   <X className="h-4 w-4" />
                 </button>
                 {city.weather ? (
-                  <WeatherCard {...city.weather} />
+                  <WeatherCard
+                    {...city.weather}
+                    lat={city.lat}
+                    lon={city.lon}
+                    hideFavoriteButton
+                  />
                 ) : (
                   <div className="glass rounded-lg p-6 shadow-card">
                     <div className="text-center">
                       <h3 className="font-semibold text-lg mb-2">{city.name}</h3>
-                      <p className="text-muted-foreground">Loading weather data...</p>
+                      <p className="text-muted-foreground">
+                        Loading weather data...
+                      </p>
                     </div>
                   </div>
                 )}

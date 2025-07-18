@@ -12,6 +12,7 @@ import Travel from "./pages/Travel";
 import SavedCities from "./pages/SavedCities";
 import WeatherMap from "./pages/WeatherMap";
 import NotFound from "./pages/NotFound";
+import SidebarOpenButton from "@/components/ui/SidebarOpenButton";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ const App = () => (
       <BrowserRouter>
         <SidebarProvider defaultOpen={true}>
           <div className="min-h-screen flex w-full">
+            <SidebarOpenButton />
             <AppSidebar />
             <SidebarInset className="flex-1">
               <Routes>

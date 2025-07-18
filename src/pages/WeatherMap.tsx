@@ -1,12 +1,66 @@
 "use client";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { MapContainer, TileLayer, LayersControl } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
 import { MapPin, Navigation } from "lucide-react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import { weatherService } from "@/services/weatherService"; // Passe ggf. den Pfad an!
 
-const OPENWEATHER_API_KEY = "DEIN_OPENWEATHER_API_KEY"; // <-- hier deinen Key eintragen!
+const OPENWEATHER_API_KEY = "662f9e367e0eed1c1a0ba5e40a5fc2b4";
+
+
+function WeatherMarker({ position }: { position: [number, number] }) {
+  const [weather, setWeather] = useState<any>(null);
+
+  // Wetterdaten bei Positionswechsel laden
+  useEffect(() => {
+    setWeather(null); // Reset while loading
+    weatherService.getCurrentWeather(position[0], position[1]).then(setWeather);
+  }, [position[0], position[1]]);
+
+  // Default Leaflet Icon fix
+  const icon = L.icon({
+    iconUrl: "https://cdn.jsdelivr.net/npm/lucide-static/icons/map-pin.svg",
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+  });
+
+  return (
+    <Marker position={position} icon={icon}>
+      <Popup>
+        {weather ? (
+          <div className="min-w-[180px] text-center">
+            <div className="font-bold">{weather.location}</div>
+            <div className="text-2xl my-1">{weather.temperature}°C</div>
+            <div>{weather.condition}</div>
+            <div className="text-xs text-muted-foreground">{weather.description}</div>
+            <div className="mt-2 flex justify-between text-xs">
+              <span>💧 {weather.humidity}%</span>
+              <span>🌬 {weather.windSpeed} km/h</span>
+            </div>
+          </div>
+        ) : (
+          <div>Lade Wetter...</div>
+        )}
+      </Popup>
+    </Marker>
+  );
+}
+
+// Komponente, um auf Kartenklick zu reagieren
+function ClickHandler({ onMapClick }: { onMapClick: (coords: [number, number]) => void }) {
+  useMapEvents({
+    click(e) {
+      onMapClick([e.latlng.lat, e.latlng.lng]);
+    },
+  });
+  return null;
+}
 
 const WeatherMap = () => {
+  const [markerPos, setMarkerPos] = useState<[number, number] | null>(null);
+
   return (
     <div className="min-h-screen bg-clear">
       <div className="container mx-auto p-6">
@@ -14,8 +68,6 @@ const WeatherMap = () => {
           <h1 className="text-3xl font-bold mb-2 text-white">Weather Map</h1>
           <p className="text-white/80">Interactive weather conditions worldwide</p>
         </div>
-
-        {/* Map Container */}
         <Card className="h-[600px] shadow-card glass overflow-hidden">
           <div className="h-full">
             <MapContainer
@@ -24,40 +76,19 @@ const WeatherMap = () => {
               style={{ height: "100%", width: "100%" }}
               scrollWheelZoom={true}
             >
-              <LayersControl position="topright">
-                <LayersControl.BaseLayer checked name="OpenStreetMap">
-                  <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-                  />
-                </LayersControl.BaseLayer>
-                <LayersControl.Overlay checked name="Clouds">
-                  <TileLayer
-                    url={`https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`}
-                    attribution='&copy; <a href="https://openweathermap.org/">OpenWeatherMap</a>'
-                  />
-                </LayersControl.Overlay>
-                <LayersControl.Overlay name="Precipitation">
-                  <TileLayer
-                    url={`https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`}
-                  />
-                </LayersControl.Overlay>
-                <LayersControl.Overlay name="Temperature">
-                  <TileLayer
-                    url={`https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`}
-                  />
-                </LayersControl.Overlay>
-                <LayersControl.Overlay name="Wind">
-                  <TileLayer
-                    url={`https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`}
-                  />
-                </LayersControl.Overlay>
-              </LayersControl>
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+              />
+              <TileLayer
+                url={`https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${OPENWEATHER_API_KEY}`}
+                attribution='&copy; <a href="https://openweathermap.org/">OpenWeatherMap</a>'
+              />
+              <ClickHandler onMapClick={setMarkerPos} />
+              {markerPos && <WeatherMarker position={markerPos} />}
             </MapContainer>
           </div>
         </Card>
-
-        {/* Map Legend */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
           <div className="flex items-center gap-2 p-3 rounded-lg glass">
             <div className="w-4 h-4 rounded-full bg-accent"></div>
