@@ -13,59 +13,62 @@ interface SavedCity {
   weather?: AppWeatherData;
 }
 
-// Hilfsfunktion für saubere Rundung!
-function roundCoord(coord: number): number {
-  return Number(coord.toFixed(4));
-}
-
-const DEFAULT_CITIES: SavedCity[] = [
-  { name: "Würzburg", lat: roundCoord(49.7913), lon: roundCoord(9.9534) },
-  { name: "Stockholm", lat: roundCoord(59.3293), lon: roundCoord(18.0686) },
-  { name: "Barcelona", lat: roundCoord(41.3851), lon: roundCoord(2.1734) },
-  { name: "Berlin", lat: roundCoord(52.5200), lon: roundCoord(13.4050) },
+// <--- NEU: Cities als Name, echte Koordinaten werden erst beim Start geholt!
+const DEFAULT_CITIES_NAMES = [
+  "Würzburg",
+  "Stockholm",
+  "Barcelona",
+  "Berlin",
 ];
 
+// Toleranz für Koordinatenvergleich
+const COORD_TOLERANCE = 0.00001;
+
+// NEU: Hole Default-Cities per Geocoding-API
+async function fetchDefaultCitiesFromAPI(): Promise<SavedCity[]> {
+  const apiKey = "662f9e367e0eed1c1a0ba5e40a5fc2b4"; // <-- Dein Key!
+  const cities = await Promise.all(
+    DEFAULT_CITIES_NAMES.map(async (name) => {
+      const res = await fetch(
+        `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(
+          name
+        )}&limit=1&appid=${apiKey}`
+      );
+      const [geo] = await res.json();
+      return geo
+        ? { name, lat: geo.lat, lon: geo.lon }
+        : null;
+    })
+  );
+  return cities.filter(Boolean) as SavedCity[];
+}
 
 const SavedCities = () => {
   const [savedCities, setSavedCities] = useState<SavedCity[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Hilfsfunktion fürs Einlesen
-  function parseCities(cities: any[]): SavedCity[] {
-    return (cities || []).map((c: any) => ({
-      ...c,
-      lat: Number(c.lat),
-      lon: Number(c.lon),
-    }));
-  }
-
   // Initial load & Wetterdaten holen
   const loadSavedCities = useCallback(async () => {
     setLoading(true);
     try {
-      // Immer als Number einlesen!
-      const saved = parseCities(JSON.parse(localStorage.getItem("savedCities") || "[]"));
-      const baseCities = saved.length > 0 ? saved : DEFAULT_CITIES;
-
+      let saved: SavedCity[] = JSON.parse(localStorage.getItem("savedCities") || "[]");
+      if (!Array.isArray(saved) || saved.length === 0) {
+        // Beim Erststart echte Defaults holen!
+        saved = await fetchDefaultCitiesFromAPI();
+        localStorage.setItem("savedCities", JSON.stringify(saved));
+      }
+      // Wetterdaten holen
       const citiesWithWeather = await Promise.all(
-        baseCities.map(async (city) => {
+        saved.map(async (city) => {
           try {
-            const weather = await weatherService.getCurrentWeather(roundCoord(city.lat), roundCoord(city.lon));
-            return { ...city, lat: roundCoord(city.lat), lon: roundCoord(city.lon), weather };
+            const weather = await weatherService.getCurrentWeather(city.lat, city.lon);
+            return { ...city, weather };
           } catch {
-            return { ...city, lat: roundCoord(city.lat), lon: roundCoord(city.lon) };
+            return city;
           }
         })
       );
       setSavedCities(citiesWithWeather);
-
-      // Defaults speichern, falls keine Cities vorher da
-      if (saved.length === 0) {
-        localStorage.setItem(
-          "savedCities",
-          JSON.stringify(DEFAULT_CITIES)
-        );
-      }
     } catch (error) {
       setSavedCities([]);
     } finally {
@@ -82,8 +85,8 @@ const SavedCities = () => {
     const cityToRemove = savedCities[index];
     const updated = savedCities.filter((city, i) => {
       return !(
-        roundCoord(city.lat) === roundCoord(cityToRemove.lat) &&
-        roundCoord(city.lon) === roundCoord(cityToRemove.lon)
+        Math.abs(Number(city.lat) - Number(cityToRemove.lat)) < COORD_TOLERANCE &&
+        Math.abs(Number(city.lon) - Number(cityToRemove.lon)) < COORD_TOLERANCE
       );
     });
     setSavedCities(updated);
@@ -92,8 +95,8 @@ const SavedCities = () => {
       JSON.stringify(
         updated.map(({ name, lat, lon }) => ({
           name,
-          lat: roundCoord(lat),
-          lon: roundCoord(lon),
+          lat,
+          lon,
         }))
       )
     );
@@ -106,7 +109,7 @@ const SavedCities = () => {
       const citiesWithWeather = await Promise.all(
         savedCities.map(async (city) => {
           try {
-            const weather = await weatherService.getCurrentWeather(roundCoord(city.lat), roundCoord(city.lon));
+            const weather = await weatherService.getCurrentWeather(city.lat, city.lon);
             return { ...city, weather };
           } catch {
             return city;
@@ -127,24 +130,20 @@ const SavedCities = () => {
     return () => clearInterval(interval);
   }, [savedCities]);
 
-  // Tab-Synchronisierung (immer parseCities benutzen!)
+  // Tab-Synchronisierung
   useEffect(() => {
     const syncCities = () => {
-      const saved = parseCities(JSON.parse(localStorage.getItem("savedCities") || "[]"));
+      let saved: SavedCity[] = JSON.parse(localStorage.getItem("savedCities") || "[]");
       setSavedCities((current) => {
         if (
           saved.length !== current.length ||
           saved.some(
             (s, i) =>
-              roundCoord(s.lat) !== roundCoord(current[i]?.lat) ||
-              roundCoord(s.lon) !== roundCoord(current[i]?.lon)
+              Math.abs(Number(s.lat) - Number(current[i]?.lat)) > COORD_TOLERANCE ||
+              Math.abs(Number(s.lon) - Number(current[i]?.lon)) > COORD_TOLERANCE
           )
         ) {
-          return saved.map(city => ({
-            ...city,
-            lat: roundCoord(city.lat),
-            lon: roundCoord(city.lon),
-          }));
+          return saved;
         }
         return current;
       });
@@ -153,23 +152,21 @@ const SavedCities = () => {
     return () => window.removeEventListener("storage", syncCities);
   }, []);
 
-  // Neue Stadt hinzufügen (aus Suche/Map) – alles gerundet & als Number!
+  // Neue Stadt hinzufügen (aus Suche/Map)
   useEffect(() => {
     const handleCityAdd = async (event: CustomEvent) => {
       const { lat, lon, name } = event.detail;
-      const roundedLat = roundCoord(Number(lat));
-      const roundedLon = roundCoord(Number(lon));
       const exists = savedCities.some(
         (city) =>
-          roundCoord(city.lat) === roundedLat &&
-          roundCoord(city.lon) === roundedLon
+          Math.abs(Number(city.lat) - Number(lat)) < COORD_TOLERANCE &&
+          Math.abs(Number(city.lon) - Number(lon)) < COORD_TOLERANCE
       );
       if (!exists) {
         let weather: AppWeatherData | undefined = undefined;
         try {
-          weather = await weatherService.getCurrentWeather(roundedLat, roundedLon);
+          weather = await weatherService.getCurrentWeather(lat, lon);
         } catch {}
-        const newCity = { name, lat: roundedLat, lon: roundedLon, weather };
+        const newCity = { name, lat, lon, weather };
         const updated = [...savedCities, newCity];
         setSavedCities(updated);
         localStorage.setItem(
@@ -177,8 +174,8 @@ const SavedCities = () => {
           JSON.stringify(
             updated.map(({ name, lat, lon }) => ({
               name,
-              lat: roundCoord(lat),
-              lon: roundCoord(lon),
+              lat,
+              lon,
             }))
           )
         );
@@ -200,7 +197,7 @@ const SavedCities = () => {
             : {
                 ...city,
                 weather: await weatherService
-                  .getCurrentWeather(roundCoord(city.lat), roundCoord(city.lon))
+                  .getCurrentWeather(city.lat, city.lon)
                   .catch(() => undefined),
               }
         )

@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Cloud, Sun, CloudRain, CloudSnow } from "lucide-react";
-import { useLocation } from "@/hooks/useLocation";
-import { weatherService } from "@/services/weatherService";
 import { Skeleton } from "@/components/ui/skeleton";
+import { weatherService } from "@/services/weatherService";
 
+// Forecast-Typ
 interface DailyForecast {
   day: string;
   date: string;
@@ -16,8 +15,25 @@ interface DailyForecast {
   airQuality: string;
 }
 
+// Default-Stadt für den Start
+const DEFAULT_LOCATION = {
+  lat: 49.7913,
+  lon: 9.9534,
+  city: "Würzburg",
+};
+
 const Forecast = () => {
-  const { lat, lon, loading: locationLoading } = useLocation();
+  // Nutze dieselbe Speicher-Logik wie in Index!
+  const [location, setLocation] = useState(() => {
+    const last = localStorage.getItem("lastLocation");
+    if (last) {
+      try {
+        return JSON.parse(last);
+      } catch {}
+    }
+    return DEFAULT_LOCATION;
+  });
+
   const [dailyForecast, setDailyForecast] = useState<DailyForecast[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,19 +47,19 @@ const Forecast = () => {
 
   const weatherColors = {
     sunny: "text-accent",
-    cloudy: "text-muted-foreground", 
+    cloudy: "text-muted-foreground",
     rainy: "text-primary",
     snowy: "text-blue-400",
   };
 
+  // Forecast holen, wenn Location sich ändert
   useEffect(() => {
     const fetchForecast = async () => {
-      if (locationLoading) return;
-      
+      if (!location.lat || !location.lon) return;
       try {
         setLoading(true);
         setError(null);
-        const forecast = await weatherService.get5DayForecast(lat, lon);
+        const forecast = await weatherService.get5DayForecast(location.lat, location.lon);
         setDailyForecast(forecast);
       } catch (err) {
         console.error('Forecast fetch error:', err);
@@ -54,30 +70,21 @@ const Forecast = () => {
     };
 
     fetchForecast();
-  }, [lat, lon, locationLoading]);
+  }, [location.lat, location.lon]);
 
-  // Listen for location changes from sidebar search
+  // Auf Standortwechsel aus Sidebar reagieren UND speichern
   useEffect(() => {
-    const handleLocationChange = async (event: CustomEvent) => {
-      const { lat: newLat, lon: newLon } = event.detail;
-      
-      try {
-        setLoading(true);
-        const forecast = await weatherService.get5DayForecast(newLat, newLon);
-        setDailyForecast(forecast);
-      } catch (err) {
-        console.error('Forecast location change error:', err);
-        setError('Unable to load forecast for new location');
-      } finally {
-        setLoading(false);
-      }
+    const handleLocationChange = (event: CustomEvent) => {
+      const { lat, lon, name } = event.detail;
+      setLocation({ lat, lon, city: name });
+      localStorage.setItem("lastLocation", JSON.stringify({ lat, lon, city: name }));
     };
 
     window.addEventListener('locationChange', handleLocationChange as EventListener);
     return () => window.removeEventListener('locationChange', handleLocationChange as EventListener);
   }, []);
 
-  if (loading || locationLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-sunny">
         <div className="container mx-auto p-6">
@@ -101,8 +108,8 @@ const Forecast = () => {
         <div className="text-center text-white">
           <h2 className="text-2xl font-bold mb-2">Forecast Unavailable</h2>
           <p className="text-white/80">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="mt-4 px-4 py-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
           >
             Try Again

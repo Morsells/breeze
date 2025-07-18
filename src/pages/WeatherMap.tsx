@@ -2,14 +2,13 @@
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
-import { MapPin, Navigation } from "lucide-react";
+import { Heart } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { weatherService } from "@/services/weatherService";
 
 const OPENWEATHER_API_KEY = "662f9e367e0eed1c1a0ba5e40a5fc2b4";
 
-// Für dynamischen Background wie auf Index
 function getBackgroundClass(condition?: string) {
   switch (condition) {
     case "sunny":
@@ -25,17 +24,77 @@ function getBackgroundClass(condition?: string) {
   }
 }
 
-// Komponente, um Wetter und Condition des Markers an die Elternkomponente zu melden
-function WeatherMarker({ position, onWeatherLoaded }: { position: [number, number], onWeatherLoaded: (condition: string | undefined) => void }) {
-  const [weather, setWeather] = useState<any>(null);
+const COORD_TOLERANCE = 0.00001;
 
+function WeatherMarker({
+  position,
+  onWeatherLoaded,
+}: {
+  position: [number, number];
+  onWeatherLoaded: (condition: string | undefined) => void;
+}) {
+  const [weather, setWeather] = useState<any>(null);
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  // Wetterdaten & Condition laden
   useEffect(() => {
     setWeather(null);
-    weatherService.getCurrentWeather(position[0], position[1]).then(w => {
+    weatherService.getCurrentWeather(position[0], position[1]).then((w) => {
       setWeather(w);
       onWeatherLoaded(w?.condition);
     });
   }, [position[0], position[1], onWeatherLoaded]);
+
+  // Favoritenstatus prüfen (wie im Rest deiner App)
+  useEffect(() => {
+    if (!weather) return;
+    const saved = (JSON.parse(localStorage.getItem("savedCities") || "[]") as any[]).map((c) => ({
+      ...c,
+      lat: Number(c.lat),
+      lon: Number(c.lon),
+    }));
+    setIsFavorite(
+      saved.some(
+        (c: any) =>
+          Math.abs(Number(c.lat) - Number(position[0])) < COORD_TOLERANCE &&
+          Math.abs(Number(c.lon) - Number(position[1])) < COORD_TOLERANCE
+      )
+    );
+  }, [weather, position]);
+
+  // Favorite Toggle
+  const handleToggleFavorite = () => {
+    if (!weather) return;
+    const saved = (JSON.parse(localStorage.getItem("savedCities") || "[]") as any[]).map((c) => ({
+      ...c,
+      lat: Number(c.lat),
+      lon: Number(c.lon),
+    }));
+
+    if (isFavorite) {
+      // Entfernen
+      const updated = saved.filter(
+        (c: any) =>
+          Math.abs(Number(c.lat) - Number(position[0])) >= COORD_TOLERANCE ||
+          Math.abs(Number(c.lon) - Number(position[1])) >= COORD_TOLERANCE
+      );
+      localStorage.setItem("savedCities", JSON.stringify(updated));
+      setIsFavorite(false);
+    } else {
+      // Hinzufügen
+      const updated = [
+        ...saved,
+        { name: weather.location, lat: Number(position[0]), lon: Number(position[1]) },
+      ];
+      localStorage.setItem("savedCities", JSON.stringify(updated));
+      setIsFavorite(true);
+      window.dispatchEvent(
+        new CustomEvent("addCity", {
+          detail: { lat: Number(position[0]), lon: Number(position[1]), name: weather.location },
+        })
+      );
+    }
+  };
 
   const icon = L.icon({
     iconUrl: "https://cdn.jsdelivr.net/npm/lucide-static/icons/map-pin.svg",
@@ -47,7 +106,21 @@ function WeatherMarker({ position, onWeatherLoaded }: { position: [number, numbe
     <Marker position={position} icon={icon}>
       <Popup>
         {weather ? (
-          <div className="min-w-[180px] text-center">
+          <div className="min-w-[180px] text-center relative">
+            {/* Herz Button oben rechts */}
+            <button
+              onClick={handleToggleFavorite}
+              className="absolute top-2 right-2 text-accent hover:text-accent/80 transition"
+              aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+              title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+              style={{ background: "transparent" }}
+            >
+              {isFavorite ? (
+                <Heart className="w-6 h-6" fill="currentColor" />
+              ) : (
+                <Heart className="w-6 h-6" />
+              )}
+            </button>
             <div className="font-bold">{weather.location}</div>
             <div className="text-2xl my-1">{weather.temperature}°C</div>
             <div>{weather.condition}</div>

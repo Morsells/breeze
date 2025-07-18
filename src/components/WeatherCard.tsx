@@ -30,10 +30,8 @@ const weatherGradients = {
   snowy: "bg-clear",
 };
 
-// Hilfsfunktion für präzise Rundung (immer Zahl zurückgeben!)
-function roundCoord(coord?: number): number {
-  return coord !== undefined ? Number(Number(coord).toFixed(4)) : NaN;
-}
+// ** Toleranz für den Favoriten-Vergleich **
+const COORD_TOLERANCE = 0.00001;
 
 export function WeatherCard({
   temperature,
@@ -53,31 +51,29 @@ export function WeatherCard({
   // Favoriten-Status
   const [isFavorite, setIsFavorite] = useState(false);
 
-  // Favoritenprüfung: auf exakt 4 Nachkommastellen gerundet (als Zahl)
+  // Favoritenprüfung mit Toleranz
   useEffect(() => {
     if (lat === undefined || lon === undefined) return;
-    const roundedLat = roundCoord(lat);
-    const roundedLon = roundCoord(lon);
-    // Wandle hier alles aus storage auch in Zahl um!
     const saved = (JSON.parse(localStorage.getItem("savedCities") || "[]") as any[]).map(c => ({
       ...c,
       lat: Number(c.lat),
       lon: Number(c.lon),
     }));
+
+      // <--- HIER DEBUG LOGS EINBAUEN ---
+  console.log("[WeatherCard] lat/lon von Props:", lat, lon);
+  console.log("[WeatherCard] Favoriten (localStorage):", saved);
     setIsFavorite(
       saved.some(
         (c: any) =>
-          roundCoord(c.lat) === roundedLat &&
-          roundCoord(c.lon) === roundedLon
+          Math.abs(Number(c.lat) - Number(lat)) < COORD_TOLERANCE &&
+          Math.abs(Number(c.lon) - Number(lon)) < COORD_TOLERANCE
       )
     );
   }, [lat, lon, location]);
 
   const handleToggleFavorite = () => {
     if (lat === undefined || lon === undefined) return;
-    const roundedLat = roundCoord(lat);
-    const roundedLon = roundCoord(lon);
-    // Immer alles in Zahl konvertieren!
     const saved = (JSON.parse(localStorage.getItem("savedCities") || "[]") as any[]).map(c => ({
       ...c,
       lat: Number(c.lat),
@@ -88,8 +84,8 @@ export function WeatherCard({
       // Entfernen
       const updated = saved.filter(
         (c: any) =>
-          roundCoord(c.lat) !== roundedLat ||
-          roundCoord(c.lon) !== roundedLon
+          Math.abs(Number(c.lat) - Number(lat)) >= COORD_TOLERANCE ||
+          Math.abs(Number(c.lon) - Number(lon)) >= COORD_TOLERANCE
       );
       localStorage.setItem("savedCities", JSON.stringify(updated));
       setIsFavorite(false);
@@ -97,13 +93,13 @@ export function WeatherCard({
       // Hinzufügen
       const updated = [
         ...saved,
-        { name: location, lat: roundedLat, lon: roundedLon }
+        { name: location, lat: Number(lat), lon: Number(lon) }
       ];
       localStorage.setItem("savedCities", JSON.stringify(updated));
       setIsFavorite(true);
       window.dispatchEvent(
         new CustomEvent("addCity", {
-          detail: { lat: roundedLat, lon: roundedLon, name: location },
+          detail: { lat: Number(lat), lon: Number(lon), name: location },
         })
       );
     }
