@@ -1,18 +1,70 @@
-# Breeze – Wetter & Travel Planner (Frontend)
+# Breeze – Wetter-App & Travel Planner (Frontend)
 
-Willkommen zu **Breeze**: Mit dieser modernen React-Anwendung kannst du bequem Wetterdaten, 5-Tage-Prognosen, Travel-Packing-Listen und Favoriten verwalten – mobilfreundlich, performant, 100 % als Docker-Container ausführbar.
+Willkommen zu **Breeze** – der React-basierten All-in-One-Plattform für Wetter, Reiseplanung und Favoritenverwaltung.  
+Modern, responsiv und vollständig als Docker-Container lauffähig.
 
 ---
 
 ## Projektüberblick
 
-Breeze ist eine vollständig als SPA umgesetzte React/Vite-Anwendung, die Wetterdaten via OpenWeatherMap (und Bilder via Pixabay) holt. Es gibt folgende Kern-Features:
+- Moderne Single Page Application (React/Vite)
+- Datenquellen: OpenWeatherMap (Wetter) & Pixabay (Bilder)
+- Komplett lauffähig als Docker-Container (kein Node.js/NPM auf dem Host erforderlich)
+- Mobile-optimiertes, responsives Design
 
-- Wetterübersicht für Städte (Live-Suche & Favoriten)
-- 5-Tage-Vorhersage mit Symbolen
-- Travel-Planner mit Packing-Tipps & Bild-Upload
-- Mobile-optimierte Navigation (inkl. Sidebar)
-- Alles läuft im Docker-Container, kein Node oder NPM auf dem System notwendig.
+---
+
+## Features & Funktionen
+
+### **Startseite / Aktuelles Wetter**
+- Wetteranzeige für die ausgewählte Stadt mit Temperatur, Zustand, Wind, Luftfeuchtigkeit und UV-Index
+- Favoriten-Herz zum Hinzufügen/Entfernen der Stadt aus den Favoriten
+- Schnelle Stadtsuche (Live-Autocomplete)
+- 24-Stunden-Prognose (Wetterverlauf, Icons & Temperaturen)
+- Sonnenaufgang & Sonnenuntergang (mit Symbolen)
+- Zusatzinfos: Luftqualität, Sichtweite, Luftdruck
+- Responsives Layout, Dark/Light Mode
+
+### **5-Tage-Vorhersage**
+- Prognose der kommenden fünf Tage für die gewählte Stadt
+- Detaillierte Tageskarten mit Wetter-Icons, Temperatur (min/max) und Zustand
+- Suchfunktion für Städte
+- Automatische Aktualisierung bei Standortänderung
+- Mobil- und Desktopoptimiert
+
+### **Travel Planner**
+- Neue Reiseziele anlegen mit:
+  - Intelligenter Stadtsuche (Autocomplete)
+  - Auswahl eines Reisedatums (Kalender)
+  - Bild-Upload (Drag & Drop, Dateiauswahl oder automatische Suche)
+- Automatisch generierte Packliste je nach Wetterbedingungen am Zielort
+- Übersicht aller Reisen als Cards mit Wettervorhersage, Bild, Datum & Wetterwarnungen („Rain expected“)
+- Reisen entfernen (Papierkorb)
+- Detailansicht mit allen Infos & Packempfehlungen
+- Persistenz: Alles bleibt nach Neuladen gespeichert (LocalStorage)
+- Responsives Layout und Dark Mode
+
+### **Favoriten / Saved Cities**
+- Verwaltung aller favorisierten Städte
+- Wetter-Kurzinfo je Stadt (Temperatur, Symbol)
+- Schnellnavigation zu Favoriten
+- Entfernen aus der Favoritenliste
+
+### **Wetterkarte**
+- Interaktive Karte mit aktuellen Wetterdaten (z. B. Temperatur, Regen, Bewölkung)
+- Zoom, Pan & zentrieren auf aktuellen Standort
+- Verschiedene Wetter-Layer (nach API-Verfügbarkeit)
+- Anpassung für alle Bildschirmgrößen
+
+### **404 Fehlerseite**
+- Freundliche Anzeige bei unbekannten Seiten/Fehlern
+- Button zum Zurückkehren auf die Startseite
+
+### **Weitere Funktionen**
+- Sidebar für schnelle Navigation auf allen Devices (inkl. Mobile-Menü)
+- Umschalten zwischen Dark Mode und Light Mode
+- Lokale Speicherung der wichtigsten Daten (Favoriten, Reisen) ohne externen Server
+- Nutzerfeedback über Toast-Messages bei Fehlern oder Erfolgen
 
 ---
 
@@ -23,7 +75,6 @@ Breeze ist eine vollständig als SPA umgesetzte React/Vite-Anwendung, die Wetter
 - **Docker** muss installiert sein (Docker Desktop oder Engine).
 
 ### 2. Projekt klonen
-
 ```bash
 git clone <REPO_URL>
 cd <PROJEKTORDNER>
@@ -80,16 +131,6 @@ http://localhost:8080
   docker rm <CONTAINER_ID>    # Container löschen
   docker rmi breeze-app       # Image löschen
   ```
-
----
-
-## Nutzung
-
-- **Suche:** Städte können direkt gesucht werden (Live-Autocomplete im Suchfeld)
-- **Travel-Planner:** Per Klick auf „Add“ Ziel eingeben, Datum via Kalender auswählen, Bild hochladen (Drag & Drop oder Explorer), Packing-Liste wird automatisch vorgeschlagen
-- **Delete:** Reisen lassen sich direkt entfernen (Papierkorb)
-- **Dark/Light Mode:** Umschaltbar rechts oben
-- **100 % mobilfähig:** Sidebar als Menü, alles responsive
 
 ---
 
