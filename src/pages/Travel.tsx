@@ -19,7 +19,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/
 import { weatherService } from "../services/weatherService";
 import { useToast } from "../hooks/use-toast";
 import { DayPicker } from "react-day-picker";
-import { format } from "date-fns";
+import { parse, format } from "date-fns";
 import "react-day-picker/dist/style.css";
 
 const PIXABAY_KEY = "51536006-dfdfb3a83a7a49cca353bc4ef";
@@ -105,6 +105,20 @@ const initialDestinations = [
     lon: 4.85
   }
 ];
+
+function getForecastRange(days: string[], tripDate: string) {
+  if (!days || days.length === 0) return null;
+  // Parse das Jahr aus tripDate, fallback auf aktuelles Jahr falls fehlerhaft
+  let year = new Date().getFullYear();
+  if (tripDate) {
+    const parts = tripDate.match(/\b\d{4}\b/);
+    if (parts) year = +parts[0];
+  }
+  const first = parse(`${days[0]} ${year}`, "MMM dd yyyy", new Date());
+  const last = parse(`${days[days.length - 1]} ${year}`, "MMM dd yyyy", new Date());
+  if (isNaN(first.getTime()) || isNaN(last.getTime())) return null;
+  return `${format(first, "MMM dd")} – ${format(last, "MMM dd, yyyy")}`;
+}
 
 export default function Travel() {
   const [destinations, setDestinations] = useState<any[]>(() => {
@@ -318,6 +332,11 @@ export default function Travel() {
     }
   };
 
+  // Delete Handler
+  const handleDeleteDestination = (idx: number) => {
+    setDestinations((prev) => prev.filter((_, i) => i !== idx));
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#156180] to-[#184463] dark:from-[#156180] dark:to-[#184463] relative transition-colors">
       <div className="container mx-auto p-4 md:p-8">
@@ -347,17 +366,32 @@ export default function Travel() {
                       Trip Date: <span className="font-semibold">{destination.tripDate}</span>
                     </div>
                   </div>
-                  {destination.alert && (
-                    <div className="flex items-center gap-1 text-amber-600 dark:text-amber-300 text-sm">
-                      <AlertTriangle className="h-4 w-4" />
-                      <span>{destination.alert}</span>
-                    </div>
-                  )}
+                  <div className="flex gap-2 items-center">
+                    {destination.alert && (
+                      <div className="flex items-center gap-1 text-amber-600 dark:text-amber-300 text-sm">
+                        <AlertTriangle className="h-4 w-4" />
+                        <span>{destination.alert}</span>
+                      </div>
+                    )}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="hover:bg-red-100 dark:hover:bg-red-900"
+                      onClick={() => handleDeleteDestination(idx)}
+                      aria-label="Delete"
+                      title="Delete"
+                    >
+                      <Trash2 className="h-5 w-5 text-red-400" />
+                    </Button>
+                  </div>
                 </div>
                 <div className="mt-4 mb-3">
                   <div className="flex items-center gap-2 text-gray-700 dark:text-white/70 text-sm">
                     <Calendar className="h-4 w-4" />
-                    <span>Next 5 days</span>
+                    <span>
+                      {getForecastRange(destination.days, destination.tripDate) || "No forecast"}
+                    </span>
                   </div>
                   <div className="font-medium text-gray-800 dark:text-white mt-1">{destination.weather}</div>
                 </div>
@@ -590,7 +624,6 @@ export default function Travel() {
                   </Button>
                 </div>
               )}
-              {/* Falls jemand manuell eine URL einfügen möchte */}
             </div>
             <Button
               className="w-full mt-2 flex items-center justify-center"
