@@ -1,17 +1,43 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { MapPin, Calendar, AlertTriangle, Package, Plus, Loader2 } from "lucide-react";
+import {
+  MapPin,
+  Calendar,
+  AlertTriangle,
+  Package,
+  Plus,
+  Loader2,
+  Cloud,
+  Sun,
+  CloudRain,
+  CloudSnow,
+  Search,
+  Trash2
+} from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import { weatherService } from "../services/weatherService";
 import { useToast } from "../hooks/use-toast";
+import { DayPicker } from "react-day-picker";
+import { format } from "date-fns";
+import "react-day-picker/dist/style.css";
 
-// Platzhalterbild für Städte (Avatar mit Stadtnamen)
-function getCityPlaceholder(city: string) {
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(city)}&background=0D8ABC&color=fff&size=512&font-size=0.45`;
-}
+const PIXABAY_KEY = "51536006-dfdfb3a83a7a49cca353bc4ef";
 
-// Packing-Empfehlungen dynamisch generieren
+const weatherIcons = {
+  sunny: Sun,
+  cloudy: Cloud,
+  rainy: CloudRain,
+  snowy: CloudSnow,
+};
+
+const weatherColors = {
+  sunny: "text-accent",
+  cloudy: "text-muted-foreground",
+  rainy: "text-primary",
+  snowy: "text-blue-400",
+};
+
 function getPackingRecommendations(dest: any) {
   const items: string[] = [];
   const allForecasts = dest.forecast?.map((x: string) => x.toLowerCase()) || [];
@@ -81,7 +107,6 @@ const initialDestinations = [
 ];
 
 export default function Travel() {
-  // Lade destinations aus localStorage (oder nutze initialDestinations)
   const [destinations, setDestinations] = useState<any[]>(() => {
     if (typeof window !== "undefined") {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -99,9 +124,52 @@ export default function Travel() {
   const [newImg, setNewImg] = useState("");
   const [loadingAdd, setLoadingAdd] = useState(false);
 
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   const toast = useToast();
 
-  // Wetter für Paris/Lyon nachladen, falls nötig
+  // Autocomplete states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const searchTimeout = useRef<any>(null);
+
+  useEffect(() => {
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    if (searchQuery.length < 2) {
+      setSearchResults([]);
+      setShowResults(false);
+      return;
+    }
+    searchTimeout.current = setTimeout(async () => {
+      try {
+        const res = await weatherService.searchCities(searchQuery);
+        setSearchResults(res || []);
+        setShowResults(true);
+      } catch {
+        setSearchResults([]);
+        setShowResults(false);
+      }
+    }, 350);
+    return () => clearTimeout(searchTimeout.current);
+  }, [searchQuery]);
+
+  const handleCitySelect = (cityObj: any) => {
+    setNewCity(cityObj.name + (cityObj.country ? `, ${cityObj.country}` : ""));
+    setSearchQuery(cityObj.name + (cityObj.country ? `, ${cityObj.country}` : ""));
+    setShowResults(false);
+  };
+
+  // Date picker state
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [tripDateObj, setTripDateObj] = useState<Date | undefined>(undefined);
+
+  useEffect(() => {
+    if (tripDateObj) setNewDate(format(tripDateObj, "MMMM dd, yyyy"));
+  }, [tripDateObj]);
+
+  // Weather API
   useEffect(() => {
     async function updateWeather(idx: number, lat: number, lon: number) {
       try {
@@ -114,7 +182,6 @@ export default function Travel() {
         const forecast = forecastData.map((d: any) => d.condition || "");
         const temps = forecastData.map((d: any) => `${d.high ?? "?"}°C`);
         const alert = forecast.some((desc: string) => desc.toLowerCase().includes("rain")) ? "Rain expected" : null;
-
         setDestinations((old) =>
           old.map((dest, i) =>
             i === idx
@@ -139,7 +206,6 @@ export default function Travel() {
         );
       }
     }
-
     destinations.forEach((dest, idx) => {
       if (dest.days.length === 0 && typeof dest.lat === "number" && typeof dest.lon === "number") {
         updateWeather(idx, dest.lat, dest.lon);
@@ -148,20 +214,34 @@ export default function Travel() {
     // eslint-disable-next-line
   }, []);
 
-  // Persistiere destinations in localStorage bei jeder Änderung!
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(destinations));
     }
   }, [destinations]);
 
-  // Wetter holen für neue Stadt
+  // Pixabay fetch
+  async function fetchPixabayImage(cityName: string) {
+    try {
+      const nameOnly = cityName.split(",")[0].trim();
+      const res = await fetch(
+        `https://pixabay.com/api/?key=${PIXABAY_KEY}&q=${encodeURIComponent(nameOnly)}&image_type=photo&orientation=horizontal&category=places&safesearch=true&per_page=3`
+      );
+      const data = await res.json();
+      if (data.hits && data.hits.length > 0) {
+        return data.hits[0].webformatURL || data.hits[0].largeImageURL;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
   async function handleAddDestination() {
-    if (!newCity || !newDate) return;
+    if ((!newCity && !searchQuery) || !newDate) return;
     setLoadingAdd(true);
     try {
-      // Geocoding via searchCities
-      const cities = await weatherService.searchCities(newCity);
+      const cities = await weatherService.searchCities(newCity || searchQuery);
       const location = cities && cities[0];
       if (!location || !location.lat || !location.lon) {
         toast.toast({
@@ -171,11 +251,7 @@ export default function Travel() {
         setLoadingAdd(false);
         return;
       }
-
-      // Wetter holen
       const forecastData = await weatherService.get5DayForecast(location.lat, location.lon);
-
-      // Daten aufbereiten für Card:
       const days = forecastData.map((d: any) => d.date?.replace(".", "") || "");
       const forecast = forecastData.map((d: any) => d.condition || "");
       const temps = forecastData.map((d: any) => `${d.high ?? "?"}°C`);
@@ -183,14 +259,19 @@ export default function Travel() {
         ? forecastData[0].description.charAt(0).toUpperCase() + forecastData[0].description.slice(1)
         : "No data";
       const alert = forecast.some((desc: string) => desc.toLowerCase().includes("rain")) ? "Rain expected" : null;
-
+      const cityName = location.name || newCity || searchQuery;
+      let imageURL = newImg;
+      if (!imageURL) {
+        imageURL = await fetchPixabayImage(cityName);
+        if (!imageURL) {
+          imageURL = `https://placehold.co/512x256?text=${encodeURIComponent(cityName)}`;
+        }
+      }
       setDestinations([
         ...destinations,
         {
-          city: location.name || newCity,
-          image: newImg
-            ? newImg
-            : getCityPlaceholder(location.name || newCity),
+          city: cityName,
+          image: imageURL,
           weather,
           alert,
           days,
@@ -201,8 +282,12 @@ export default function Travel() {
       ]);
       setNewCity("");
       setNewDate("");
+      setTripDateObj(undefined);
       setNewImg("");
       setAddOpen(false);
+      setSearchQuery("");
+      setSearchResults([]);
+      setShowResults(false);
     } catch (e) {
       toast.toast({
         variant: "destructive",
@@ -211,6 +296,27 @@ export default function Travel() {
     }
     setLoadingAdd(false);
   }
+
+  // Datei-Handling für Drag & Drop + Button
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragActive(false);
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = evt => setNewImg(evt.target?.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = evt => setNewImg(evt.target?.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#156180] to-[#184463] dark:from-[#156180] dark:to-[#184463] relative transition-colors">
@@ -226,18 +332,12 @@ export default function Travel() {
           {destinations.map((destination, idx) => (
             <Card key={idx} className="bg-white/90 dark:bg-[#11181f] rounded-2xl overflow-hidden shadow-lg border-0 transition-colors">
               <div className="h-56 bg-[#f5f8fa] dark:bg-[#191e24] flex items-center justify-center relative">
-                {destination.image ? (
-                  <img
-                    src={destination.image}
-                    alt={destination.city}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="flex flex-col items-center">
-                    <MapPin className="h-12 w-12 text-cyan-400 mb-2" />
-                    <p className="text-cyan-400/70">Destination Image</p>
-                  </div>
-                )}
+                <img
+                  src={destination.image}
+                  alt={destination.city}
+                  className="w-full h-full object-cover"
+                  onError={e => (e.currentTarget.src = `https://placehold.co/512x256?text=${encodeURIComponent(destination.city)}`)}
+                />
               </div>
               <div className="p-6">
                 <div className="flex items-center justify-between">
@@ -268,13 +368,26 @@ export default function Travel() {
                       <Loader2 className="animate-spin mr-2" /> Loading...
                     </div>
                   ) : (
-                    destination.days.map((day, i) => (
-                      <div key={i} className="flex flex-col items-center min-w-[48px]">
-                        <div className="text-base md:text-xl">{destination.forecast[i]}</div>
-                        <div className="text-xs text-gray-600 dark:text-white/60">{day}</div>
-                        <div className="text-xs text-gray-900 dark:text-white font-bold">{destination.temps[i]}</div>
-                      </div>
-                    ))
+                    destination.days.map((day, i) => {
+                      const cond = (destination.forecast[i] || "").toLowerCase();
+                      let iconKey = "sunny";
+                      if (cond.includes("rain")) iconKey = "rainy";
+                      else if (cond.includes("snow")) iconKey = "snowy";
+                      else if (cond.includes("cloud")) iconKey = "cloudy";
+                      else if (cond.includes("sun")) iconKey = "sunny";
+                      const IconComponent = weatherIcons[iconKey];
+                      const iconColor = weatherColors[iconKey];
+
+                      return (
+                        <div key={i} className="flex flex-col items-center min-w-[48px]">
+                          <div className={`mb-1 ${iconColor}`}>
+                            <IconComponent className="h-6 w-6" />
+                          </div>
+                          <div className="text-xs text-gray-600 dark:text-white/60">{day}</div>
+                          <div className="text-xs text-gray-900 dark:text-white font-bold">{destination.temps[i]}</div>
+                        </div>
+                      );
+                    })
                   )}
                 </div>
                 <Button
@@ -332,6 +445,7 @@ export default function Travel() {
                 src={selectedDestination.image}
                 alt={selectedDestination.city}
                 className="w-full h-40 object-cover rounded-xl mb-3"
+                onError={e => (e.currentTarget.src = `https://placehold.co/512x256?text=${encodeURIComponent(selectedDestination.city)}`)}
               />
               <div className="mb-2">
                 <span className="font-semibold text-gray-700 dark:text-cyan-300">Expected Weather: </span>
@@ -365,43 +479,123 @@ export default function Travel() {
             <DialogTitle>Add Destination</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
+            {/* Auto-Complete Suche für Stadt */}
+            <div className="relative">
               <label className="font-medium text-gray-900 dark:text-white block mb-1">City & Country</label>
-              <input
-                className="w-full rounded-md p-2 bg-[#f5f8fa] dark:bg-[#191e24] text-gray-900 dark:text-white border border-gray-300 dark:border-white/20"
-                type="text"
-                placeholder="e.g. Rome, Italy"
-                value={newCity}
-                onChange={e => setNewCity(e.target.value)}
-                disabled={loadingAdd}
-              />
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <input
+                  className="w-full rounded-md p-2 pl-10 bg-[#f5f8fa] dark:bg-[#191e24] text-gray-900 dark:text-white border border-gray-300 dark:border-white/20"
+                  type="text"
+                  placeholder="e.g. Rome, Italy"
+                  value={searchQuery}
+                  onChange={e => {
+                    setSearchQuery(e.target.value);
+                    setNewCity(""); // Nur übernehmen, wenn ausgewählt
+                  }}
+                  onFocus={() => { if (searchResults.length > 0) setShowResults(true); }}
+                  onBlur={() => setTimeout(() => setShowResults(false), 180)}
+                  disabled={loadingAdd}
+                  autoComplete="off"
+                />
+                {showResults && searchResults.length > 0 && (
+                  <div className="absolute z-50 left-0 right-0 bg-white dark:bg-[#191e24] border border-gray-300 dark:border-white/20 mt-1 rounded-md shadow-lg max-h-56 overflow-y-auto">
+                    {searchResults.map((city, idx) => (
+                      <button
+                        key={idx}
+                        className="w-full text-left px-4 py-2 hover:bg-cyan-50 dark:hover:bg-cyan-900 transition-colors"
+                        onMouseDown={() => handleCitySelect(city)}
+                      >
+                        <div className="font-medium">{city.name}</div>
+                        <div className="text-xs text-gray-500">
+                          {city.state ? `${city.state}, ` : ""}{city.country}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-            <div>
+            {/* Trip Date Picker */}
+            <div className="relative">
               <label className="font-medium text-gray-900 dark:text-white block mb-1">Trip Date</label>
-              <input
-                className="w-full rounded-md p-2 bg-[#f5f8fa] dark:bg-[#191e24] text-gray-900 dark:text-white border border-gray-300 dark:border-white/20"
-                type="text"
-                placeholder="e.g. July 10, 2025"
-                value={newDate}
-                onChange={e => setNewDate(e.target.value)}
-                disabled={loadingAdd}
-              />
+              <div className="relative">
+                <input
+                  className="w-full rounded-md p-2 pl-10 bg-[#f5f8fa] dark:bg-[#191e24] text-gray-900 dark:text-white border border-gray-300 dark:border-white/20 cursor-pointer"
+                  type="text"
+                  placeholder="e.g. July 10, 2025"
+                  value={newDate}
+                  readOnly
+                  onClick={() => setDatePickerOpen(true)}
+                  disabled={loadingAdd}
+                />
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 pointer-events-none" />
+                {datePickerOpen && (
+                  <div className="absolute z-50 mt-2 bg-white dark:bg-[#191e24] rounded-md shadow-lg border border-gray-200 dark:border-white/10 p-2">
+                    <DayPicker
+                      mode="single"
+                      selected={tripDateObj}
+                      onSelect={date => {
+                        setTripDateObj(date || undefined);
+                        setDatePickerOpen(false);
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
+            {/* Image Upload/Preview */}
             <div>
-              <label className="font-medium text-gray-900 dark:text-white block mb-1">Image URL (optional)</label>
-              <input
-                className="w-full rounded-md p-2 bg-[#f5f8fa] dark:bg-[#191e24] text-gray-900 dark:text-white border border-gray-300 dark:border-white/20"
-                type="text"
-                placeholder="/assets/images/rome.jpeg"
-                value={newImg}
-                onChange={e => setNewImg(e.target.value)}
-                disabled={loadingAdd}
-              />
+              <label className="font-medium text-gray-900 dark:text-white block mb-1">Image (optional)</label>
+              <div
+                className={`w-full rounded-md p-2 bg-[#f5f8fa] dark:bg-[#191e24] border-2 border-dashed transition-colors flex flex-col items-center justify-center relative cursor-pointer
+                  ${dragActive ? "border-cyan-400 bg-cyan-50 dark:bg-cyan-900" : "border-gray-300 dark:border-white/20"}
+                `}
+                onDragOver={e => { e.preventDefault(); setDragActive(true); }}
+                onDragLeave={e => { e.preventDefault(); setDragActive(false); }}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                style={{ minHeight: "72px" }}
+              >
+                <input
+                  type="file"
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                />
+                {newImg ? (
+                  <span className="text-green-700 dark:text-green-300">Bild ausgewählt – siehe Vorschau ↓</span>
+                ) : (
+                  <span className="text-gray-500 dark:text-gray-400 text-center block">
+                    Bild hierher ziehen oder <span className="underline">Datei auswählen</span>
+                  </span>
+                )}
+              </div>
+              {/* Preview */}
+              {newImg && (
+                <div className="mt-3 flex flex-col items-center gap-2">
+                  <img
+                    src={newImg}
+                    alt="Selected Preview"
+                    className="max-h-40 max-w-full rounded-md shadow"
+                  />
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setNewImg("")}
+                  >
+                    <Trash2 className="mr-1 h-4 w-4" />
+                    Bild entfernen
+                  </Button>
+                </div>
+              )}
+              {/* Falls jemand manuell eine URL einfügen möchte */}
             </div>
             <Button
               className="w-full mt-2 flex items-center justify-center"
               onClick={handleAddDestination}
-              disabled={!newCity || !newDate || loadingAdd}
+              disabled={(!newCity && !searchQuery) || !newDate || loadingAdd}
             >
               {loadingAdd && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               Add Destination
