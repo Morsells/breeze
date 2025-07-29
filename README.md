@@ -1,186 +1,128 @@
-🌦️ Breeze Weather App
-Eine moderne, interaktive Wetter-App mit OpenWeather-API, Favoriten, dynamischer Karte & stylischem UI – gebaut mit React, TailwindCSS und React Leaflet.
+# Breeze – Wetter & Travel Planner (Frontend)
 
-Inhalt
-Features
+Willkommen zu **Breeze**: Mit dieser modernen React-Anwendung kannst du bequem Wetterdaten, 5-Tage-Prognosen, Travel-Packing-Listen und Favoriten verwalten – mobilfreundlich, performant, 100 % als Docker-Container ausführbar.
 
-Screenshots
+---
 
-Tech Stack
+## Projektüberblick
 
-Setup & Installation
+Breeze ist eine vollständig als SPA umgesetzte React/Vite-Anwendung, die Wetterdaten via OpenWeatherMap (und Bilder via Pixabay) holt. Es gibt folgende Kern-Features:
 
-Umgebungsvariablen
+- Wetterübersicht für Städte (Live-Suche & Favoriten)
+- 5-Tage-Vorhersage mit Symbolen
+- Travel-Planner mit Packing-Tipps & Bild-Upload
+- Mobile-optimierte Navigation (inkl. Sidebar)
+- Alles läuft im Docker-Container, kein Node oder NPM auf dem System notwendig.
 
-Verfügbare Scripts
+---
 
-Ordnerstruktur
+## Installation & Start
 
-Komponenten & Architektur
+### 1. Voraussetzungen
 
-API & Services
+- **Docker** muss installiert sein (Docker Desktop oder Engine).
 
-FAQ & Troubleshooting
+### 2. Projekt klonen
 
-Contribution
+'''bash
+git clone <REPO_URL>
+cd <PROJEKTORDNER>
+'''
 
-Lizenz
+### 3. Build des Containers
 
-Features
-🔍 Live-Wetter für beliebige Orte weltweit
+Das Image wird komplett mit allen Abhängigkeiten gebaut:
 
-⭐ Favoritenfunktion (mit localStorage, robust gegen Rundungsfehler)
+'''bash
+docker build -t breeze-app .
+'''
 
-🗺️ Interaktive Wetterkarte mit Layern und Map-Click-Feature
+### 4. Starten des Containers
 
-🎨 Dynamischer Hintergrund je nach aktuellem Wetter (sunny, cloudy, rainy, snowy)
+Starte die Anwendung (Port 8080 auf localhost):
 
-🕓 Stunden- und Tages-Vorhersage
+'''bash
+docker run -p 8080:80 breeze-app
+'''
 
-☀️ Sunrise/Sunset-Anzeige
+### 5. App im Browser aufrufen
 
-💨 Air Quality, Wind, Druck, Sichtweite etc.
+Öffne deinen Browser und gehe auf:
 
-🖥️ Responsive & modernes UI (Tailwind, Glassmorphism)
+'''
+http://localhost:8080
+'''
 
-⚡ Schnelle API-Calls & Caching
+---
 
-👥 Tab-Synchronisierung für Favoriten
+## Projektstruktur
 
-🧠 Robuste Typisierung mit TypeScript
+- 'src/' – Quellcode (React-Komponenten, Seiten, Hooks, Services)
+- 'public/' – Statische Dateien (Assets, Fallback-Bilder)
+- 'Dockerfile' – Build- & Run-Definition (Multi-Stage: Node Build, Nginx Serve)
+- 'nginx.conf' – SPA-freundliches Routing für React (History-API)
+- 'README.md' – Diese Anleitung
 
-Screenshots
-(Füge hier PNGs deiner App im Light/Dark Mode, WeatherMap und Favoritenliste ein)
+---
 
-Tech Stack
-Frontend: React (18+), TypeScript, TailwindCSS
+## Wichtige Docker-Kommandos
 
-Map: React Leaflet, OpenStreetMap, OpenWeatherMap Tiles
+- **Image bauen:**  
+  'docker build -t breeze-app .'
 
-Icons: Lucide React
+- **Container starten:**  
+  'docker run -p 8080:80 breeze-app'
 
-API: OpenWeatherMap REST API
+- **Image & Container aufräumen:**  
+  '''bash
+  docker ps -a                # Container auflisten
+  docker stop <CONTAINER_ID>  # Container stoppen
+  docker rm <CONTAINER_ID>    # Container löschen
+  docker rmi breeze-app       # Image löschen
+  '''
 
-State: React Hooks, Context, Local Storage
+---
 
-Setup & Installation
-1. Repository klonen
-bash
-Kopieren
-Bearbeiten
-git clone https://github.com/dein-user/breeze-weather-app.git
-cd breeze-weather-app
-2. Abhängigkeiten installieren
-WICHTIG:
+## Nutzung
 
-Nutze Node.js 18+ (empfohlen)
+- **Suche:** Städte können direkt gesucht werden (Live-Autocomplete im Suchfeld)
+- **Travel-Planner:** Per Klick auf „Add“ Ziel eingeben, Datum via Kalender auswählen, Bild hochladen (Drag & Drop oder Explorer), Packing-Liste wird automatisch vorgeschlagen
+- **Delete:** Reisen lassen sich direkt entfernen (Papierkorb)
+- **Dark/Light Mode:** Umschaltbar rechts oben
+- **100 % mobilfähig:** Sidebar als Menü, alles responsive
 
-Falls du React 18 nutzt, installiere React Leaflet 4 (nicht 5!):
+---
 
-bash
-Kopieren
-Bearbeiten
-npm install
-npm install leaflet react-leaflet@4
-3. API Key einrichten
-Erstelle im Projekt eine .env-Datei:
+## Tests
 
-ini
-Kopieren
-Bearbeiten
-VITE_OPENWEATHER_API_KEY=dein-openweather-api-key
-(Oder passe direkt im Code den Key an.)
+Nach dem Build und Start:  
+1. Öffne die App unter 'localhost:8080'
+2. Suche nach Städten, plane Reisen, teste das UI
+3. Fehler oder Wünsche? Im Issue-Tracker melden
 
-4. Starten
-bash
-Kopieren
-Bearbeiten
-npm run dev
-Öffne http://localhost:5173 oder http://localhost:3000 (je nach Vite/Next/CRA Setup).
+---
 
-Umgebungsvariablen
-VITE_OPENWEATHER_API_KEY – dein OpenWeather API Key
-(bei Create React App: REACT_APP_...)
+## Hinweise
 
-Verfügbare Scripts
-Befehl	Zweck
-npm run dev	Entwicklungs-Server starten
-npm run build	Produktion-Build
-npm run preview	Produktion lokal testen
+- **API Keys:** Die App nutzt öffentliche Demo-Keys (Pixabay, OpenWeather). Für produktive Nutzung bitte eigene Keys im Code hinterlegen.
+- **Persistenz:** Travel-Ziele werden im LocalStorage gespeichert, kein Server notwendig.
 
-Ordnerstruktur
-plaintext
-Kopieren
-Bearbeiten
-src/
-├─ components/
-│  ├─ ui/              # Basis UI-Elemente (Button, Card, Skeleton, ...)
-│  ├─ WeatherCard.tsx  # Haupt-WeatherCard mit Favoriten-Button
-│  ├─ HourlyForecast.tsx
-│  ├─ SunriseSunset.tsx
-│  ├─ WeatherMap.tsx   # Map-Ansicht (React Leaflet)
-│  └─ SavedCities.tsx  # Favoritenliste
-├─ hooks/
-│  └─ useLocation.ts   # Hook für Geo & Location
-├─ services/
-│  └─ weatherService.ts# API Calls mit Caching
-├─ types/
-│  └─ weather.d.ts     # Wetter-Typen für TS
-├─ App.tsx
-├─ Index.tsx           # Start-/Home-Seite
-└─ ...
-Komponenten & Architektur
-WeatherCard
-Zeigt das aktuelle Wetter + Favoriten-Herz (mit Rundungs-Check und robustem Storage-Handling)
+---
 
-SavedCities
-Listet alle Favoriten, sorgt für Storage- und Intervall-Updates, synchronisiert mit allen Tabs
+## Demo-Video
 
-WeatherMap
-Interaktive Leaflet-Karte, Marker setzen, aktuelles Wetter per Popup, dynamischer Background wie Home
+Ein kurzes Video mit allen Features (UI, Mobile, Add/Delete) liegt im Repository unter 'demo.mp4' bzw. ist unter folgendem Link abrufbar:
 
-useLocation
-Liefert aktuelle Koordinaten/Stadt (Geolocation + Fallbacks)
+[Demo-Video herunterladen / anschauen](LINK_HIER_EINFÜGEN)
 
-weatherService
-Holt Wetterdaten, cached sie, mapped OpenWeather-Daten zu UI-friendly Types
+---
 
-API & Services
-OpenWeatherMap:
+## Kontakt & Support
 
-/weather für aktuelles Wetter
+Fragen oder Probleme?  
+Melde dich gerne per E-Mail: [DEINE EMAIL HIER]  
+oder erstelle ein Issue im Git-Repository.
 
-/forecast für stündliche & Tages-Vorhersage
+---
 
-/air_pollution für Air Quality
-
-/geo/1.0/direct für Geocoding
-
-FAQ & Troubleshooting
-Wetterdaten/Favoriten werden nicht korrekt angezeigt?
-Prüfe, ob dein API Key gültig ist
-
-Leere einmal LocalStorage, wenn du nach einem Update Fehler siehst
-
-Achte darauf, dass alle Koordinaten beim Speichern/Lesen mit Number(...).toFixed(4) gerundet werden
-
-Map oder API-Fehler (CORS etc.)
-Stelle sicher, dass OpenWeatherMap und OSM nicht von deiner Firewall/Adblocker geblockt werden
-
-React Leaflet will React 19?
-Nutze dann unbedingt die Version 4 von react-leaflet
-npm install react-leaflet@4
-
-Contribution
-Pull Requests und Bug Reports sind willkommen!
-Bitte stelle sicher, dass deine PRs nach dem bestehenden Code- und Styling-Standard formatiert sind.
-
-Lizenz
-MIT License
-(c) 2024 Moritz Bauer und Open Source Contributors
-
-Sonstiges
-Für weitere Fragen/Erweiterungen einfach Issue erstellen oder mich direkt kontaktieren.
-
-Screenshots, weitere Features, Demos etc. gerne ergänzen!
-
+**Viel Spaß mit Breeze!**
