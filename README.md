@@ -24,7 +24,7 @@ Breeze ist eine vollständig als SPA umgesetzte React/Vite-Anwendung, die Wetter
 
 ### 2. Projekt klonen
 
-'''bash
+''' 
 git clone <REPO_URL>
 cd <PROJEKTORDNER>
 '''
@@ -33,7 +33,7 @@ cd <PROJEKTORDNER>
 
 Das Image wird komplett mit allen Abhängigkeiten gebaut:
 
-'''bash
+''' 
 docker build -t breeze-app .
 '''
 
@@ -41,7 +41,7 @@ docker build -t breeze-app .
 
 Starte die Anwendung (Port 8080 auf localhost):
 
-'''bash
+''' 
 docker run -p 8080:80 breeze-app
 '''
 
@@ -74,7 +74,7 @@ http://localhost:8080
   'docker run -p 8080:80 breeze-app'
 
 - **Image & Container aufräumen:**  
-  '''bash
+  ''' 
   docker ps -a                # Container auflisten
   docker stop <CONTAINER_ID>  # Container stoppen
   docker rm <CONTAINER_ID>    # Container löschen
@@ -106,22 +106,6 @@ Nach dem Build und Start:
 
 - **API Keys:** Die App nutzt öffentliche Demo-Keys (Pixabay, OpenWeather). Für produktive Nutzung bitte eigene Keys im Code hinterlegen.
 - **Persistenz:** Travel-Ziele werden im LocalStorage gespeichert, kein Server notwendig.
-
----
-
-## Demo-Video
-
-Ein kurzes Video mit allen Features (UI, Mobile, Add/Delete) liegt im Repository unter 'demo.mp4' bzw. ist unter folgendem Link abrufbar:
-
-[Demo-Video herunterladen / anschauen](LINK_HIER_EINFÜGEN)
-
----
-
-## Kontakt & Support
-
-Fragen oder Probleme?  
-Melde dich gerne per E-Mail: [DEINE EMAIL HIER]  
-oder erstelle ein Issue im Git-Repository.
 
 ---
 
