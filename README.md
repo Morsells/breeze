@@ -24,61 +24,62 @@ Breeze ist eine vollständig als SPA umgesetzte React/Vite-Anwendung, die Wetter
 
 ### 2. Projekt klonen
 
+```bash
 git clone <REPO_URL>
 cd <PROJEKTORDNER>
-
+```
 
 ### 3. Build des Containers
 
 Das Image wird komplett mit allen Abhängigkeiten gebaut:
 
-''' 
+```bash
 docker build -t breeze-app .
-'''
+```
 
 ### 4. Starten des Containers
 
 Starte die Anwendung (Port 8080 auf localhost):
 
-''' 
+```bash
 docker run -p 8080:80 breeze-app
-'''
+```
 
 ### 5. App im Browser aufrufen
 
 Öffne deinen Browser und gehe auf:
 
-'''
+```
 http://localhost:8080
-'''
+```
 
 ---
 
 ## Projektstruktur
 
-- 'src/' – Quellcode (React-Komponenten, Seiten, Hooks, Services)
-- 'public/' – Statische Dateien (Assets, Fallback-Bilder)
-- 'Dockerfile' – Build- & Run-Definition (Multi-Stage: Node Build, Nginx Serve)
-- 'nginx.conf' – SPA-freundliches Routing für React (History-API)
-- 'README.md' – Diese Anleitung
+- `src/` – Quellcode (React-Komponenten, Seiten, Hooks, Services)
+- `public/` – Statische Dateien (Assets, Fallback-Bilder)
+- `Dockerfile` – Build- & Run-Definition (Multi-Stage: Node Build, Nginx Serve)
+- `nginx.conf` – SPA-freundliches Routing für React (History-API)
+- `README.md` – Diese Anleitung
 
 ---
 
 ## Wichtige Docker-Kommandos
 
 - **Image bauen:**  
-  'docker build -t breeze-app .'
+  `docker build -t breeze-app .`
 
 - **Container starten:**  
-  'docker run -p 8080:80 breeze-app'
+  `docker run -p 8080:80 breeze-app`
 
 - **Image & Container aufräumen:**  
-  ''' 
+  ```bash
   docker ps -a                # Container auflisten
   docker stop <CONTAINER_ID>  # Container stoppen
   docker rm <CONTAINER_ID>    # Container löschen
   docker rmi breeze-app       # Image löschen
-  '''
+  ```
 
 ---
 
@@ -95,7 +96,7 @@ http://localhost:8080
 ## Tests
 
 Nach dem Build und Start:  
-1. Öffne die App unter 'localhost:8080'
+1. Öffne die App unter `localhost:8080`
 2. Suche nach Städten, plane Reisen, teste das UI
 3. Fehler oder Wünsche? Im Issue-Tracker melden
 
