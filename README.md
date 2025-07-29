@@ -24,10 +24,9 @@ Breeze ist eine vollständig als SPA umgesetzte React/Vite-Anwendung, die Wetter
 
 ### 2. Projekt klonen
 
-''' 
 git clone <REPO_URL>
 cd <PROJEKTORDNER>
-'''
+
 
 ### 3. Build des Containers
 
